@@ -57,3 +57,20 @@ main,#banners,h1{position:relative;z-index:1}
 .ok-anim path{stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .35s .4s ease forwards}
 @keyframes draw{to{stroke-dashoffset:0}}
 .ok-ic.big{animation:pop .45s cubic-bezier(.2,.9,.3,1.4) both}
+
+/* --- desktop fit: use the screen width on laptops/monitors (phones untouched) --- */
+@media (min-width:1200px){
+  .bar,main,#banners{max-width:min(94vw,1560px)}
+  main{padding-top:32px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+  .card{padding:20px}
+  .mname{font-size:18px}.mmeta,.plabel{font-size:13px}
+  .badge{font-size:13px}
+  .btn{height:44px;font-size:15px}
+  .chip{font-size:14px;padding:7px 14px}
+  nav a{font-size:15px}
+  h1{font-size:34px}
+  .kpis{grid-template-columns:repeat(4,1fr)}
+  .qr-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+}
+@media (min-width:1700px){.grid{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}}
