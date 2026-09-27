@@ -100,3 +100,4 @@ main,#banners,h1{position:relative;z-index:1}
   #modal .dialog:has(#durOpts) .field label.opt{padding:9px 12px}
   #modal .dialog:has(#durOpts) h2{margin-bottom:4px}
 }
+@media (min-width:900px) and (min-height:560px){#modal .dialog .actions,[data-theme] #modal .dialog .actions{background:none;position:static;padding-bottom:0}}
