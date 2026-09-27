@@ -179,7 +179,7 @@ class H(SimpleHTTPRequestHandler):
             d = self.body()
             mid = norm_machine(d.get("machine_id"))
             start, dur = int(d.get("start", 0)), int(d.get("dur", 0))
-            if dur not in (30, 40, 60): raise ApiError(400, "dur", "Invalid duration")
+            if not (1 <= dur <= 180): raise ApiError(400, "dur", "Duration must be between 1 and 180 minutes.")
             if start < now_ms() - 60000: raise ApiError(400, "past", "That time has already passed.")
             end = start + dur * 60000
             for b in DB["bookings"].values():

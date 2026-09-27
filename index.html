@@ -429,6 +429,16 @@ h1{overflow-wrap:anywhere}
 @media (min-width:721px){.scan-sheet{align-items:center}}
 .scan-sheet .dialog{background:rgba(255,255,255,.95)}
 [data-theme=dark] .scan-sheet .dialog{background:rgba(28,30,46,.96)}
+/* custom duration */
+.custom-dur{animation:in .25s ease both}
+.cd-row{display:flex;align-items:center;gap:12px}
+.cd-row input{flex:1;height:54px!important;font-size:22px!important;font-weight:600;text-align:center}
+.cd-row span{color:var(--muted);font-size:14px}
+.cd-row input.bad{border-color:var(--red)!important;animation:shake .35s}
+.cd-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+.cd-chips .chip{cursor:pointer;font-weight:500}
+.cd-chips .chip:hover{background:var(--glass-strong)}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -2751,11 +2761,11 @@ var qrcode = function() {
 <script>
 (() => {
 'use strict';
-const KEY='washq.v2', PREF='washq.prefs', GRACE=10, CONFIRM=10, HOLD=5;
+const KEY='washq.v3', PREF='washq.prefs', GRACE=10, CONFIRM=10, HOLD=5;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const DUR=[{v:30,t:'Quick wash',d:'Lightly soiled, small loads'},{v:40,t:'Standard wash',d:'Everyday clothes, regular load'},{v:60,t:'Heavy load',d:'Bedsheets, towels, jeans, full drum'}];
-const durName=v=>(DUR.find(x=>x.v===v)||{}).t||'';
+const durName=v=>(DUR.find(x=>x.v===v)||{}).t||(v?'Custom duration':'');
 
 // ---------- identity & prefs ----------
 let prefs=JSON.parse(localStorage.getItem(PREF)||'{}');
@@ -2779,20 +2789,32 @@ applyTheme();
 // ---------- state ----------
 function blank(id,name){return{id,name:name||('Machine '+id),state:'free',start:0,end:0,dur:0,user:'',owner:'',graceEnd:0,queue:[],hold:null}}
 function reset(m){Object.assign(m,{state:'free',start:0,end:0,dur:0,user:'',owner:'',graceEnd:0,hold:null})}
+// Demo starting state — realistic mock activity. Everything stays fully interactive.
+const MOCK_USERS=['Aditya · C-204','Priya · C-112','Rohan · B-305','Sneha · A-118','Karan · C-220','Ishaan · B-401','Ananya · A-207','Vikram · C-315','Meera · B-108','Arjun · A-322'];
 function seed(){
-  const now=Date.now(),m=Array.from({length:15},(_,i)=>blank(i+1)),log=[];
-  [[2,40,28,'Aarav · B-204'],[5,60,12,'Priya · A-110'],[7,30,29,'Rohan · C-305'],[11,40,5,'Meera · A-221'],[13,60,47,'Kabir · B-118']].forEach(([id,d,el,u])=>{
-    Object.assign(m[id-1],{state:'busy',dur:d,start:now-el*60000,end:now+(d-el)*60000,user:u,owner:'demo'});log.push({t:now-el*60000,d,m:id});
+  const now=Date.now(),MS=60000,m=Array.from({length:15},(_,i)=>blank(i+1)),log=[];
+  const U=i=>MOCK_USERS[i%MOCK_USERS.length];
+  // [machine, duration, minutes elapsed, user]  — Machine 1 left free for the live sensor
+  [[3,60,38,U(0)],[5,40,9,U(1)],[7,45,33,U(4)],[10,30,4,U(3)],[13,90,61,U(5)]].forEach(([id,d,el,u])=>{
+    Object.assign(m[id-1],{state:'busy',dur:d,start:now-el*MS,end:now+(d-el)*MS,user:u,owner:'demo'});log.push({t:now-el*MS,d,m:id});
   });
-  m[4].queue=[{name:'Ishaan · D-402',client:'demo'},{name:'Neha · A-015',client:'demo'}];
-  const w=[1,0,0,0,0,0,1,3,5,4,2,2,3,2,2,3,4,6,8,9,8,6,4,2];
-  for(let d=0;d<7;d++)for(let h=0;h<24;h++){const n=Math.round(w[h]*(0.5+Math.random()*0.9));
-    for(let k=0;k<n;k++){const day=new Date(now);day.setDate(day.getDate()-d);day.setHours(h,Math.floor(Math.random()*60),0,0);
-      if(day.getTime()<now-3600000)log.push({t:day.getTime(),d:[30,40,60][k%3],m:1+Math.floor(Math.random()*15)})}}
-  // a couple of upcoming bookings by other students
-  const slot=(mins)=>{const t=new Date(now+mins*60000);t.setMinutes(Math.ceil(t.getMinutes()/15)*15,0,0);return t.getTime()};
-  const bookings=[{id:'b1',mid:3,start:slot(90),dur:40,name:'Diya · C-112',client:'demo',state:'upcoming'},
-                  {id:'b2',mid:9,start:slot(150),dur:60,name:'Arjun · B-009',client:'demo',state:'upcoming'}];
+  // cycle complete, waiting for pickup (grace period running)
+  [[9,40,3,U(2)],[14,60,7,U(8)]].forEach(([id,d,sinceDone,u])=>{
+    const end=now-sinceDone*MS;Object.assign(m[id-1],{state:'done',dur:d,start:end-d*MS,end,graceEnd:end+GRACE*MS,user:u,owner:'demo'});log.push({t:end-d*MS,d,m:id});
+  });
+  m[2].queue=[{name:U(6),client:'demo'},{name:U(9),client:'demo'}];   // Machine 3: 2 waiting
+  m[4].queue=[{name:U(7),client:'demo'}];                              // Machine 5: 1 waiting
+  m[12].queue=[{name:U(3),client:'demo'},{name:U(0),client:'demo'}];  // Machine 13: 2 waiting
+  // usage pattern: quiet mornings, lunch bump 12–2 PM, big evening peak 6–10 PM, ~zero late night
+  const w=[.3,.1,0,0,0,0,1,1.6,1.8,1.2,1,1.4,3.6,4.2,3.2,1.6,1.8,2.8,6,8.4,9,7.6,4.6,1.4];
+  const durs=[30,40,40,60,45,30,40,60,90,40];
+  for(let d=0;d<7;d++){const weekend=[0,6].includes(new Date(now-d*864e5).getDay());
+    for(let h=0;h<24;h++){const n=Math.max(0,Math.round(w[h]*(weekend?1.25:1)*(0.75+Math.random()*0.5)));
+      for(let k=0;k<n;k++){const day=new Date(now);day.setDate(day.getDate()-d);day.setHours(h,Math.floor(Math.random()*60),0,0);
+        if(day.getTime()<now-90*MS)log.push({t:day.getTime(),d:durs[(h+k+d)%durs.length],m:1+Math.floor(Math.random()*15)})}}}
+  const slot=mins=>{const t=new Date(now+mins*MS);t.setMinutes(Math.ceil(t.getMinutes()/15)*15,0,0);return t.getTime()};
+  const bookings=[{id:'b1',mid:6,start:slot(75),dur:40,name:U(7),client:'demo',state:'upcoming'},
+                  {id:'b2',mid:11,start:slot(140),dur:60,name:U(8),client:'demo',state:'upcoming'}];
   return{machines:m,log,bookings,nextId:16};
 }
 let S=JSON.parse(localStorage.getItem(KEY)||'null')||seed();
@@ -3130,8 +3152,37 @@ function durOpts(limitMs,sel=40){
   const now=Date.now();
   let first=null;
   const html=DUR.map(o=>{const dis=now+o.v*MIN()>limitMs;if(!dis&&(first===null||o.v===sel))first=o.v;return{o,dis}})
-    .map(({o,dis})=>`<label class="opt"><input type="radio" name="dur" value="${o.v}" ${dis?'disabled':''} ${o.v===first?'checked':''}><div><b>${o.t}</b><small>${dis?'Not available — machine booked soon':o.d}</small></div><span class="mins">${o.v} min</span></label>`).join('');
-  return{html,any:first!==null};
+    .map(({o,dis})=>`<label class="opt"><input type="radio" name="dur" value="${o.v}" ${dis?'disabled':''} ${o.v===first?'checked':''}><div><b>${o.t}</b><small>${dis?'Not available — machine booked soon':o.d}</small></div><span class="mins">${o.v} min</span></label>`).join('')+customOpt(first===null);
+  return{html,any:true};
+}
+// ----- custom duration -----
+const customOpt=checked=>`<label class="opt"><input type="radio" name="dur" value="custom" ${checked?'checked':''}><div><b>Custom Duration</b><small>Set your own time (1–180 min)</small></div><span class="mins">⋯</span></label>`;
+const durField=(inner)=>`<div class="field"><label>Wash type</label><div class="opts" id="durOpts">${inner}</div>
+  <div id="durCustom" class="custom-dur" hidden><div class="cd-row"><input type="number" id="durMin" step="any" inputmode="numeric" placeholder="e.g. 45" aria-label="Custom duration in minutes"><span>minutes</span></div>
+  <div class="cd-chips">${[15,45,75,90,120].map(v=>`<button type="button" class="chip" data-cd="${v}">${v} min</button>`).join('')}</div>
+  <button type="button" class="link" id="durBack">← Back to preset options</button></div></div>`;
+function wireDur(){
+  const opts=$('#durOpts'),box=$('#durCustom'),inp=$('#durMin');
+  const show=on=>{opts.hidden=on;box.hidden=!on;if(on)setTimeout(()=>inp.focus(),30)};
+  opts.querySelectorAll('input[name=dur]').forEach(r=>r.onchange=()=>show(r.value==='custom'&&r.checked));
+  $('#durBack').onclick=()=>{const f=opts.querySelector('input[name=dur]:not([value=custom]):not(:disabled)');if(f)f.checked=true;show(false)};
+  box.querySelectorAll('[data-cd]').forEach(c=>c.onclick=()=>{inp.value=c.dataset.cd;inp.classList.remove('bad')});
+  inp.oninput=()=>inp.classList.remove('bad');
+  const c=opts.querySelector('input[value=custom]');if(c&&c.checked)show(true);
+}
+// returns minutes, or null after showing an error in #msg
+function readDur(limitMs){
+  const r=document.querySelector('input[name=dur]:checked');const msg=$('#msg');
+  const err=t=>{if(msg){msg.className='msg err';msg.textContent=t}else toast(t);const i=$('#durMin');if(i&&!$('#durCustom').hidden){i.classList.add('bad');i.focus()}return null};
+  if(!r)return err('Choose a wash type.');
+  let v;
+  if(r.value==='custom'){const raw=$('#durMin').value.trim();v=Number(raw);
+    if(raw===''||!Number.isFinite(v))return err('Enter a duration in minutes.');
+    if(!Number.isInteger(v))return err('Use whole minutes only (e.g. 45).');
+    if(v<1||v>180)return err('Duration must be between 1 and 180 minutes.');}
+  else v=+r.value;
+  if(limitMs!=null&&Date.now()+v*MIN()>limitMs)return err(`That would overlap the next booking. Choose ${Math.max(1,Math.floor((limitMs-Date.now())/MIN()))} minutes or less.`);
+  return v;
 }
 const who=()=>[prefs.name,prefs.room].filter(Boolean).join(' · ');
 const nameFields=()=>`<div class="row"><div class="field" style="flex:1.4"><label>Name (optional)</label><input id="nm" maxlength="24" placeholder="e.g. Aarav" value="${esc(prefs.name||'')}"></div><div class="field" style="flex:1"><label>Room</label><input id="rm" maxlength="8" placeholder="B-204" value="${esc(prefs.room||'')}"></div></div>`;
@@ -3142,13 +3193,14 @@ function reserveDialog(id){
   const m=M(id);if(!isFree(m)){toast('This machine is no longer free');return}
   const d=durOpts(limitFor(m));
   showModal(`<form id="f"><h2>Reserve ${esc(m.name)}</h2><p>Pick a cycle. You’ll get a one-time code to confirm you’re at the machine.</p>
-    <div class="field"><label>Wash type</label><div class="opts">${d.html}</div></div>
+    ${durField(d.html)}
     ${nameFields()}
-    <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary" ${d.any?'':'disabled'}>Reserve &amp; get code</button></div></form>`);
-  $('[data-close]').onclick=closeModal;
+    <div class="msg err" id="msg"></div>
+    <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary">Reserve &amp; get code</button></div></form>`);
+  $('[data-close]').onclick=closeModal;wireDur();
   $('#f').onsubmit=e=>{e.preventDefault();askPermission();readName();
     if(!isFree(m)){closeModal();toast('Someone just reserved this machine');return}
-    const dur=+document.querySelector('input[name=dur]:checked').value;
+    const dur=readDur(limitFor(m));if(dur==null)return;
     m.hold={client:ME,until:Date.now()+HOLD*MIN(),dur,user:who(),code:newCode(),tries:0};save();lastKey='';render();otpDialog(id)};
 }
 const newCode=()=>String(Math.floor(1000+Math.random()*9000));
@@ -3199,13 +3251,13 @@ function bookDialog(id){
   const hhmm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
   showModal(`<form id="f"><h2>Book ${esc(m.name)}</h2><p>You’ll get ${CONFIRM} minutes to check in when your slot starts, or it’s released to the next person.</p>
     <div class="field"><label>Start time</label><input type="time" id="st" value="${hhmm}" required></div>
-    <div class="field"><label>Wash type</label><div class="opts">${DUR.map(o=>`<label class="opt"><input type="radio" name="dur" value="${o.v}" ${o.v===40?'checked':''}><div><b>${o.t}</b><small>${o.d}</small></div><span class="mins">${o.v} min</span></label>`).join('')}</div></div>
+    ${durField(DUR.map(o=>`<label class="opt"><input type="radio" name="dur" value="${o.v}" ${o.v===40?'checked':''}><div><b>${o.t}</b><small>${o.d}</small></div><span class="mins">${o.v} min</span></label>`).join('')+customOpt(false))}
     ${nameFields()}
     <div class="msg err" id="msg"></div>
     <div class="actions"><button type="button" class="link" id="quick" style="margin-right:auto">Test: slot in 1 min</button><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary">Book slot</button></div></form>`);
-  $('[data-close]').onclick=closeModal;
+  $('[data-close]').onclick=closeModal;wireDur();
   const submit=(startMs)=>{
-    const dur=+document.querySelector('input[name=dur]:checked').value,end=startMs+dur*60000;
+    const dur=readDur(null);if(dur==null)return;const end=startMs+dur*60000;
     const clash=S.bookings.find(b=>b.mid===id&&startMs<b.start+b.dur*60000&&b.start<end);
     if(clash){$('#msg').textContent=`Overlaps an existing booking (${range(clash)}). Pick another time.`;return}
     if(S.bookings.some(b=>b.client===ME&&b.state==='upcoming'&&b.mid===id&&Math.abs(b.start-startMs)<3600000)){$('#msg').textContent='You already have a booking near this time on this machine.';return}

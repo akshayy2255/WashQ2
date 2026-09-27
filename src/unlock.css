@@ -49,3 +49,13 @@
 @media (min-width:721px){.scan-sheet{align-items:center}}
 .scan-sheet .dialog{background:rgba(255,255,255,.95)}
 [data-theme=dark] .scan-sheet .dialog{background:rgba(28,30,46,.96)}
+/* custom duration */
+.custom-dur{animation:in .25s ease both}
+.cd-row{display:flex;align-items:center;gap:12px}
+.cd-row input{flex:1;height:54px!important;font-size:22px!important;font-weight:600;text-align:center}
+.cd-row span{color:var(--muted);font-size:14px}
+.cd-row input.bad{border-color:var(--red)!important;animation:shake .35s}
+.cd-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+.cd-chips .chip{cursor:pointer;font-weight:500}
+.cd-chips .chip:hover{background:var(--glass-strong)}
+[hidden]{display:none!important}
