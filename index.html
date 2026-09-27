@@ -325,6 +325,59 @@ nav a.active{background:var(--glass-strong);box-shadow:0 1px 2px rgba(0,0,0,.06)
 }
 @media print{body::before,body::after{display:none}}
 @media (prefers-reduced-motion:reduce){body::before{animation:none}}
+
+/* ===== v4 layout fixes ===== */
+/* 1. Card header: wrap instead of colliding */
+.card{container-type:inline-size;min-width:0}
+.card-top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:8px 10px}
+.card-top>a{flex:1 1 120px;min-width:0!important;max-width:100%}
+.card-top .badge{flex:0 1 auto;max-width:100%;min-width:0;overflow:hidden}
+.card-top .badge [data-badge]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.badge .dot{flex:none}
+@container (max-width:240px){
+  .card-top>a{flex-basis:100%}
+  .card-top .badge{font-size:11.5px}
+}
+/* 2. Names / rooms: never break mid-word; truncate with ellipsis */
+.mname,.mmeta,.bitem b,.mrow .grow div,.queue,.tag,.banner b{word-break:normal;overflow-wrap:normal}
+.mname,.mmeta{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tags{min-width:0}
+.tag{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bitem>div{min-width:0;overflow:hidden}
+.bitem>div,.bitem small{overflow-wrap:normal;word-break:normal}
+.bitem small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bitem>button{flex:none}
+.detail .sub,.dialog p,.banner div{overflow-wrap:normal;word-break:normal}
+.dialog h2{overflow-wrap:anywhere;word-break:normal}
+.url{word-break:normal;overflow-wrap:anywhere}
+.mrow .grow div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.field input{text-overflow:ellipsis}
+h1{overflow-wrap:anywhere}
+/* buttons: keep labels on one line */
+.actions{min-width:0;flex-wrap:nowrap}
+.btn{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.btn svg,.mini{flex:none}
+@container (max-width:250px){.card .btn{font-size:13px;padding:0 10px;gap:4px}}
+.dialog .actions{flex-wrap:wrap}
+/* 3. Mobile ~360px */
+@media (max-width:420px){
+  .bar{padding:10px 12px;gap:2px}
+  nav a{padding:8px 9px}
+  .toolbar{gap:10px}
+  .banner{flex-wrap:wrap}
+  .banner>div{flex:1 1 180px}
+  .dialog{padding:20px}
+  .otp-in input{width:48px;height:56px}
+  .otp-show{letter-spacing:10px;font-size:38px}
+}
+/* blur perf: isolate glass layers on their own compositing layer, lighter blur on phones */
+.card,.panel,header{transform:translateZ(0)}
+.card:hover{transform:translateY(-2px) translateZ(0)}
+@media (max-width:720px){:root{--blur:saturate(160%) blur(12px)}.chip,.btn,.field input,.field select,.otp-in input{-webkit-backdrop-filter:none;backdrop-filter:none}}
+/* never clip badge text: shrink first, then wrap as whole words */
+.card-top .badge [data-badge]{white-space:normal;overflow:visible;text-overflow:clip;word-break:normal;overflow-wrap:normal}
+.card-top .badge{overflow:visible;white-space:normal;line-height:1.3}
+@container (max-width:270px){.card-top .badge{font-size:11px;padding:4px 8px;gap:5px;letter-spacing:-.1px}}
 </style>
 </head>
 <body>
