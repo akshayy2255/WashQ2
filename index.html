@@ -609,13 +609,75 @@ nav a{display:inline-flex;align-items:center;gap:6px}
 @container (max-width:300px){.card .btn{padding:0 10px;gap:5px;font-size:13.5px}.card .mini{width:30px;height:30px}.card .actions{gap:2px}}
 @container (max-width:300px){.card .btn{padding:0 8px;font-size:13px}}
 @media (max-width:480px){.sect .bitem{flex-wrap:wrap;row-gap:8px}.sect .bitem>div:first-child{flex:1 1 100%}.sect .bitem small{white-space:normal}.sect .bitem>.btn,.sect .bitem>.tag{margin-left:auto}}
+
+/* ===== v7 fixes ===== */
+/* --- 3. ambient background driven by JS-set CSS variables --- */
+@property --bg-gradient-start{syntax:'<color>';inherits:true;initial-value:#a5b4fc}
+@property --bg-gradient-mid{syntax:'<color>';inherits:true;initial-value:#d8b4fe}
+@property --bg-gradient-end{syntax:'<color>';inherits:true;initial-value:#93c5fd}
+:root{transition:--bg-gradient-start 1.5s ease,--bg-gradient-mid 1.5s ease,--bg-gradient-end 1.5s ease,--a4 1.5s ease}
+body::before{
+  background:
+    radial-gradient(40% 45% at 18% 22%,var(--bg-gradient-start) 0%,transparent 70%),
+    radial-gradient(38% 42% at 82% 18%,var(--bg-gradient-mid) 0%,transparent 70%),
+    radial-gradient(45% 50% at 70% 85%,var(--bg-gradient-end) 0%,transparent 70%),
+    radial-gradient(35% 40% at 12% 88%,var(--bg-gradient-mid) 0%,transparent 70%),
+    var(--a4);
+  transition:background 1.5s ease;
+}
+[data-theme=dark] body::before{opacity:.85}
+
+/* --- 1. block dropdown --- */
+.block-wrap{position:relative}
+.block-sel{display:inline-flex;align-items:center}
+.block-sel[aria-expanded=true]{border-color:var(--primary);background-color:var(--glass-strong)}
+.block-scrim{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.2);opacity:0;transition:opacity .18s ease}
+.block-scrim.on{opacity:1}
+body.menu-open header{z-index:100}
+main,#banners,h1{position:relative;z-index:1}
+.block-menu{position:absolute;top:calc(100% + 8px);left:0;z-index:100;min-width:260px;padding:6px;
+  border-radius:var(--r-lg);border:1px solid var(--glass-border);
+  background:rgba(255,255,255,.97);box-shadow:0 8px 24px rgba(0,0,0,.15),0 2px 6px rgba(0,0,0,.06);
+  opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top left;transition:opacity .18s ease,transform .18s ease}
+[data-theme=dark] .block-menu{background:rgba(30,32,46,.98);border-color:rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.3)}
+.block-menu.on{opacity:1;transform:none}
+.block-menu[hidden]{display:none}
+.block-opt{width:100%;display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--r-md);text-align:left;color:var(--text);transition:background .15s,transform .12s}
+.block-opt:hover,.block-opt:focus-visible{background:color-mix(in srgb,var(--primary) 9%,transparent);outline:none}
+.block-opt:active{transform:scale(.98)}
+.block-opt.sel{background:color-mix(in srgb,var(--primary) 13%,transparent)}
+.block-opt>svg{color:var(--primary);flex:none}
+.bo-ic{width:32px;height:32px;border-radius:var(--r-md);display:grid;place-items:center;font-weight:700;font-size:14px;flex:none;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
+.bo-t{flex:1;display:flex;flex-direction:column;min-width:0}
+.bo-t b{font-size:14px;font-weight:600}.bo-t small{font-size:12px;color:var(--muted)}
+
+/* --- 2. unlock flow --- */
+.pin-card{display:flex;align-items:center;gap:14px;margin-top:12px;padding:12px 14px;border-radius:var(--r-md);background:color-mix(in srgb,var(--primary) 9%,var(--glass-soft));border:1px solid var(--glass-border)}
+.pin-card>small{font-size:12px;color:var(--muted);line-height:1.4}
+.pin-card>div small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.pin-big{font-size:30px;font-weight:700;letter-spacing:6px;font-variant-numeric:tabular-nums;color:var(--text)}
+.pin-inline{font-variant-numeric:tabular-nums;letter-spacing:1px;color:var(--text)}
+.pin-lbl{display:block;text-align:center;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.err-t{color:var(--red)}
+.scan-open{height:52px;padding:0 28px;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.35);flex:none}
+.scan:not(.live) .scan-line{display:none}
+.scan.wrong .scan-frame i{border-color:#ff6b5e}
+.scan.wrong .scan-line{display:none}
+.scan-err b{font-weight:700}
+.ok-anim circle{stroke:currentColor;stroke-width:3;stroke-dasharray:145;stroke-dashoffset:145;animation:draw .5s ease forwards}
+.ok-anim path{stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .35s .4s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.ok-ic.big{animation:pop .45s cubic-bezier(.2,.9,.3,1.4) both}
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
     <a class="logo" href="#/"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8H16"/><path d="M12 8.2c1.6 2 2.6 3.4 2.6 4.7a2.6 2.6 0 0 1-5.2 0c0-1.3 1-2.7 2.6-4.7z" fill="currentColor" fill-opacity=".18"/></svg><span>WashQ</span></a>
-    <div class="block-wrap" title="Switch hostel block"><select id="blockSel" class="block-sel" aria-label="Hostel block"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option></select></div>
+    <div class="block-wrap" id="blockWrap">
+      <button type="button" id="blockBtn" class="block-sel" aria-haspopup="listbox" aria-expanded="false" aria-controls="blockMenu" title="Switch hostel block"><span id="blockLbl">Block C</span></button>
+      <div class="block-menu" id="blockMenu" role="listbox" aria-label="Hostel block" tabindex="-1" hidden></div>
+    </div>
     <nav>
       <a href="#/" data-r="home"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Machines</span></a>
       <a href="#/admin" data-r="admin"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analytics</span></a>
@@ -625,6 +687,7 @@ nav a{display:inline-flex;align-items:center;gap:6px}
     <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
   </div>
 </header>
+<div class="block-scrim" id="blockScrim" hidden></div>
 <div id="banners"></div>
 <main id="app"></main>
 <div id="modal"></div>
@@ -2954,7 +3017,7 @@ function applyTheme(){
   document.documentElement.dataset.theme=t;$('#themeBtn').innerHTML=t==='dark'?sun:moon;
   document.querySelector('meta[name=theme-color]').content=t==='dark'?'#1e1f21':'#ffffff';
 }
-$('#themeBtn').onclick=()=>{prefs.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';savePrefs();applyTheme()};
+$('#themeBtn').onclick=()=>{prefs.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';savePrefs();applyTheme();if(typeof setMood==='function')setMood()};
 applyTheme();
 
 // ---------- state ----------
@@ -3127,7 +3190,7 @@ function actionsFor(m){
   if(i.cls==='hold'){
     if(i.owner===ME){
       if(i.b&&i.b.state==='pending')return`<button class="btn primary" data-act="checkin" data-id="${m.id}">Yes, I'm here</button>`;
-      if(i.b&&i.b.sid)return`<button class="btn primary" data-act="scan" data-bid="${i.b.id}">${ic.scan}Scan Machine QR</button>`;
+      if(i.b&&i.b.sid)return`<button class="btn primary" data-act="scan" data-bid="${i.b.id}">${ic.scan}Scan QR to Unlock</button>`;
       return`<button class="btn primary" data-act="resume" data-id="${m.id}">${ic.lock}Enter unlock code</button>`;
     }
     return queueBtn(m);
@@ -3193,7 +3256,7 @@ function viewHome(soft){
 function myBookingsSection(){
   const mine=S.bookings.filter(b=>b.client===ME).sort((a,b)=>a.start-b.start);
   if(!mine.length)return'';
-  return`<details class="sect" ${prefs.bOpen?'open':''} ontoggle="window.__bt(this.open)"><summary>My bookings (${mine.length})</summary><div class="inner"><div class="blist">${mine.map(b=>`<div class="bitem"><div><b>${esc(M(b.mid).name)}</b> · ${range(b)}<br><small>${durName(b.dur)} · ${b.state==='upcoming'?'Upcoming':b.state==='pending'?'Check in now':'Checked in'}</small></div><div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div></div>`).join('')}</div></div></details>`;
+  return`<details class="sect" ${prefs.bOpen?'open':''} ontoggle="window.__bt(this.open)"><summary>My bookings (${mine.length})</summary><div class="inner"><div class="blist">${mine.map(b=>`<div class="bitem"><div><b>${esc(M(b.mid).name)}</b> · ${range(b)}<br><small>${durName(b.dur)} · ${b.state==='upcoming'?'Upcoming':b.state==='pending'?'Check in now':'Checked in'}${b.pin?` · PIN <b class="pin-inline">${esc(b.pin)}</b>`:''}</small></div><div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR to Unlock</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div></div>`).join('')}</div></div></details>`;
 }
 window.__bt=o=>{prefs.bOpen=o;savePrefs()};
 function patch(list){
@@ -3228,7 +3291,7 @@ function viewMachine(soft){
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="h2">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
-        ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`:''}</div>`).join('')}</div>`
+        ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR to Unlock</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`:''}</div>`).join('')}</div>`
           :'<div class="sub" style="font-size:14px">No upcoming bookings. Book ahead to skip the queue — you’ll get 10 minutes to check in when your slot starts.</div>'}
       </div>
     </div>`;
@@ -3326,10 +3389,23 @@ function banners(){
   if(b.dataset.k!==k){b.innerHTML=items.map(x=>`<div class="banner ${x.cls||''}">${x.ico||warn}${x.h}</div>`).join('');b.dataset.k=k}
   else b.querySelectorAll('[data-t]').forEach((s,ix)=>s.textContent=fmt(items[ix].t-now));
 }
+// ----- ambient background: tint follows the share of FREE machines (recomputed on every render) -----
+const AMB={
+  light:{busy:['#fdba74','#fca5a5','#fcd34d'],mixed:['#a5b4fc','#d8b4fe','#93c5fd'],free:['#6ee7b7','#5eead4','#a7f3d0']},
+  dark: {busy:['#7c2d12','#6b1d2a','#713f12'],mixed:['#312e81','#4c1d95','#1e3a8a'],free:['#065f46','#115e59','#134e4a']}
+};
+const hex2=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mixC=(a,b,t)=>'#'+hex2(a).map((v,i)=>Math.round(v+(hex2(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
+let ambKey='';
 function setMood(){
-  const n=S.machines.length||1,free=S.machines.filter(isFree).length,busy=n-free;
-  const mood=S.machines.length&&free/n>=.6?'free':(S.machines.length&&busy/n>=.6?'busy':'mixed');
-  if(document.documentElement.dataset.mood!==mood)document.documentElement.dataset.mood=mood;
+  const n=S.machines.length,free=S.machines.filter(isFree).length,pct=n?free/n:.5;
+  const theme=document.documentElement.dataset.theme==='dark'?'dark':'light',P=AMB[theme];
+  const key=theme+'|'+free+'/'+n;if(key===ambKey)return;ambKey=key;
+  // 0% free → warm amber/red · 50% → neutral blue/purple · 100% free → green/teal
+  const [from,to,t]=pct<.5?[P.busy,P.mixed,pct/.5]:[P.mixed,P.free,(pct-.5)/.5];
+  const c=from.map((x,i)=>mixC(x,to[i],t)),r=document.documentElement.style;
+  r.setProperty('--bg-gradient-start',c[0]);r.setProperty('--bg-gradient-mid',c[1]);r.setProperty('--bg-gradient-end',c[2]);
+  const mood=pct>=.6?'free':(1-pct)>=.6?'busy':'mixed';document.documentElement.dataset.mood=mood;
+  console.log(`[WashQ] ambient: ${free}/${n} machines free = ${Math.round(pct*100)}% → ${mood} (${theme}) start ${c[0]} end ${c[2]}`);
 }
 function render(soft){setMood();({home:viewHome,machine:viewMachine,setup:viewSetup,admin:viewAdmin})[route](soft);banners()}
 
@@ -3462,7 +3538,7 @@ function bookDialog(id){
     if(!API.ok)return finish();
     const go=async()=>{
       const btn=document.querySelector('#f button.primary');if(btn){btn.disabled=true;btn.textContent='Booking…'}
-      try{const r=await api('POST','/api/bookings',{machine_id:mcode(id),machine_name:m.name,start:startMs,dur});b.sid=r.booking.id;finish()}
+      try{const r=await api('POST','/api/bookings',{machine_id:mcode(id),machine_name:m.name,start:startMs,dur});b.sid=r.booking.id;b.pin=r.pin;finish()}
       catch(e){if(btn){btn.disabled=false;btn.textContent='Book slot'}if(e.status===401)return loginDialog(()=>bookDialog(id));const el=$('#msg');if(el)el.textContent=e.message;else toast(e.message)}
     };
     if(!prefs.token)return loginDialog(()=>{bookDialog(id)},'Sign in to book a slot');
@@ -3474,7 +3550,7 @@ function bookDialog(id){
 
 function confirmDialog(bid){
   const b=S.bookings.find(x=>x.id===bid);if(!b)return;const m=M(b.mid);
-  if(b.state==='confirmed'){if(b.sid){openScanner(b);return}openOtpForBooking(b);return}
+  if(b.state==='confirmed'){if(b.sid){startUnlock(b);return}openOtpForBooking(b);return}
   openConfirm=bid;
   showModal(`<h2>Are you going to use ${esc(m.name)} now?</h2>
     <p>Your booked slot (${range(b)}) has started. Confirm within ${CONFIRM} minutes or your slot will be released.</p>
@@ -3487,7 +3563,7 @@ function confirmDialog(bid){
   $('#yes').onclick=()=>{
     if(M(b.mid).state!=='free'){toast(`${m.name} is still finishing a cycle — try again in a moment`);return}
     b.state='confirmed';b.confirmBy=Date.now()+CONFIRM*MIN();
-    if(b.sid){const mm=M(b.mid);mm.hold={client:ME,until:b.confirmBy,dur:b.dur,user:b.name,bookingId:b.id,qr:true};save();lastKey='';render();closeModal();openScanner(b);return}
+    if(b.sid){const mm=M(b.mid);mm.hold={client:ME,until:b.confirmBy,dur:b.dur,user:b.name,bookingId:b.id,qr:true};save();lastKey='';render();closeModal();startUnlock(b);return}
     openOtpForBooking(b);
   };
 }
@@ -3508,7 +3584,7 @@ document.addEventListener('click',e=>{
     case'green':greenInfo();break;
     case'share-no':prefs.shareMatch=null;savePrefs();banners();break;
     case'share-yes':{const sm=prefs.shareMatch;prefs.shareMatch=null;savePrefs();banners();toast(`Suggestion sent to ${sm?sm.first:'them'} — they'll see your machine number`);break}
-    case'scan':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b)openScanner(b);break}
+    case'scan':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b)startUnlock(b);break}
     case'resume':otpDialog(id);break;
     case'checkin':{const b=activeBooking(m);if(b&&b.client===ME)confirmDialog(b.id);break}
     case'release':if(m.hold){const bid=m.hold.bookingId;m.hold=null;if(bid){const b=S.bookings.find(x=>x.id===bid);if(b)releaseBooking(b,'user')}save();closeModal();lastKey='';render();toast('Reservation released')}break;
@@ -3539,17 +3615,45 @@ Object.assign(ic,{
   info:svgI('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',14)
 });
 
-// ---------- block switcher ----------
+// ---------- block switcher (custom dropdown: solid panel, elevated, scrim, click-outside closes) ----------
+function blockStats(b){
+  const s=b===BLOCK?S:loadBlock(b),n=s.machines.length,free=s.machines.filter(m=>m.state==='free'&&!m.hold).length;return{n,free};
+}
+function switchBlock(b){
+  if(b===BLOCK)return;
+  save();BLOCK=b;prefs.block=b;savePrefs();S=loadBlock(b);save();
+  closeModal();if(typeof closeScanner==='function')closeScanner(true);
+  if(route==='machine'&&!M(param))location.hash='#/';
+  $('#banners').dataset.k='x';$('#blockLbl').textContent='Block '+b;lastKey='';render();pollSensor();
+  toast(`Showing Block ${b} · ${S.machines.length} machines`);
+}
 function initBlockSel(){
-  const sel=$('#blockSel');sel.value=BLOCK;
-  sel.onchange=()=>{
-    const b=sel.value;if(b===BLOCK)return;
-    save();BLOCK=b;prefs.block=b;savePrefs();S=loadBlock(b);save();
-    closeModal();if(typeof closeScanner==='function')closeScanner();
-    if(route==='machine'&&!M(param))location.hash='#/';
-    $('#banners').dataset.k='x';lastKey='';render();pollSensor();
-    toast(`Showing Block ${b} · ${S.machines.length} machines`);
+  const btn=$('#blockBtn'),menu=$('#blockMenu'),scrim=$('#blockScrim');
+  $('#blockLbl').textContent='Block '+BLOCK;
+  const items=()=>[...menu.querySelectorAll('[role=option]')];
+  const open=()=>{
+    menu.innerHTML=Object.keys(BLOCKS).map(b=>{const st=blockStats(b);return`<button type="button" role="option" class="block-opt ${b===BLOCK?'sel':''}" aria-selected="${b===BLOCK}" data-b="${b}">
+      <span class="bo-ic">${b}</span><span class="bo-t"><b>Block ${b}</b><small>${st.n} machines · ${st.free} free now</small></span>${b===BLOCK?ic.check:''}</button>`}).join('');
+    const hb=document.querySelector('header').getBoundingClientRect().bottom,wt=$('#blockWrap').getBoundingClientRect().top;menu.style.top=(hb-wt+8)+'px';   // 8px below the nav bar
+    menu.hidden=false;scrim.hidden=false;document.body.classList.add('menu-open');btn.setAttribute('aria-expanded','true');
+    requestAnimationFrame(()=>{menu.classList.add('on');scrim.classList.add('on')});
+    (menu.querySelector('.sel')||items()[0]).focus();
   };
+  const close=(focusBtn)=>{
+    if(menu.hidden)return;menu.classList.remove('on');scrim.classList.remove('on');btn.setAttribute('aria-expanded','false');
+    document.body.classList.remove('menu-open');setTimeout(()=>{if(!menu.classList.contains('on')){menu.hidden=true;scrim.hidden=true}},180);
+    if(focusBtn)btn.focus();
+  };
+  btn.onclick=e=>{e.stopPropagation();menu.hidden?open():close()};
+  scrim.onclick=()=>close();
+  menu.onclick=e=>{const o=e.target.closest('[data-b]');if(!o)return;close(true);switchBlock(o.dataset.b)};
+  menu.onkeydown=e=>{const it=items(),i=it.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'){e.preventDefault();it[(i+1)%it.length].focus()}
+    else if(e.key==='ArrowUp'){e.preventDefault();it[(i-1+it.length)%it.length].focus()}
+    else if(e.key==='Escape'||e.key==='Tab'){e.preventDefault();close(true)}};
+  btn.onkeydown=e=>{if(e.key==='ArrowDown'&&menu.hidden){e.preventDefault();open()}};
+  document.addEventListener('click',e=>{if(!menu.hidden&&!e.target.closest('#blockWrap'))close()});
+  window.addEventListener('hashchange',()=>close());
 }
 
 // ---------- report issue / maintenance ----------
@@ -3631,11 +3735,12 @@ function greenInfo(){
 }
 
 // ---------- detergent / load checklist (before OTP) ----------
-function checklistDialog(m,next){
+function checklistDialog(m,next,onCancel){
   const items=[['Detergent added','Right amount in the drawer'],['Pockets checked','No coins, pens or tissues'],['Load balanced','Not over-filled, spread evenly']];
   showModal(`<h2>Quick check before you start</h2><p>Takes two seconds and helps avoid re-washes and stuck machines.</p>
     <div class="opts checks">${items.map(([t,d],i)=>`<label class="opt"><input type="checkbox" ${prefs.checks&&prefs.checks[i]?'checked':''}><div><b>${t}</b><small>${d}</small></div></label>`).join('')}</div>
-    <div class="actions"><button class="btn tonal" data-act="release" data-id="${m.id}">Cancel</button><button class="btn primary" id="ckGo">${ic.check}Got it, continue</button></div>`);
+    <div class="actions"><button class="btn tonal" ${onCancel?'id="ckNo"':`data-act="release" data-id="${m.id}"`}>Cancel</button><button class="btn primary" id="ckGo">${ic.check}Got it, continue</button></div>`);
+  if(onCancel)$('#ckNo').onclick=onCancel;
   $('#ckGo').onclick=()=>{prefs.checks=[...document.querySelectorAll('.checks input')].map(c=>c.checked);savePrefs();next()};
   setTimeout(()=>$('#ckGo')&&$('#ckGo').focus(),60);
 }
@@ -3661,6 +3766,7 @@ function leaderboard(){
 }
 window.__lb=o=>{prefs.lbOpen=o;savePrefs()};
 
+const isz=(svg,n)=>svg.replace(/width="\d+" height="\d+"/,`width="${n}" height="${n}"`);
 // ================= Backend-authorised QR unlock =================
 // Booking → Booking Confirmation → Scan Machine QR → Machine Verification → Enter Password → Unlocking → Machine Unlocked
 const API={ok:false};
@@ -3679,7 +3785,7 @@ async function initApi(){
   renderAcct();
   // camera-app scan of the machine sticker: ?machine_id=WM-04 → open scanner flow for my booking on that machine
   const q=new URLSearchParams(location.search).get('machine_id');
-  if(q&&API.ok){const b=myQrBookingFor(q);if(b)setTimeout(()=>verifyMachine(b,q.toUpperCase()),500)}
+  if(q&&API.ok&&prefs.token){const b=myQrBookingFor(q);if(b)setTimeout(()=>startUnlock(b,q.toUpperCase()),500)}   // phone camera app scanned the sticker
 }
 const myQrBookingFor=code=>S.bookings.filter(b=>b.client===ME&&b.sid&&M(b.mid)&&mcode(b.mid)===code.toUpperCase()).sort((a,b)=>a.start-b.start)[0];
 
@@ -3693,7 +3799,7 @@ function renderAcct(){
 }
 function acctDialog(){
   const u=prefs.user||{};
-  showModal(`<h2>${esc(u.name||'Signed in')}</h2><p>Room ${esc(u.room)} · your password is used to unlock machines for your bookings.</p>
+  showModal(`<h2>${esc(u.name||'Signed in')}</h2><p>Room ${esc(u.room)} · each booking gets its own 4-digit unlock PIN.</p>
     <div class="actions"><button class="btn tonal" data-close>Close</button><button class="btn primary" id="lo">Sign out</button></div>`);
   $('[data-close]').onclick=closeModal;
   $('#lo').onclick=async()=>{try{await api('POST','/api/logout')}catch(e){}prefs.token=null;prefs.user=null;savePrefs();renderAcct();closeModal();toast('Signed out')};
@@ -3713,26 +3819,51 @@ function loginDialog(then,title){
     catch(er){$('#lm').textContent=er.message;btn.disabled=false;btn.textContent='Sign in'}};
 }
 
-// ---------- booking confirmation ----------
+// ================= Booked-slot QR unlock flow =================
+// A Reserve → Booking Confirmed ("Scan QR to Unlock")
+// B Pre-unlock checklist
+// C Scan Machine QR screen → "Open Camera & Scan" (getUserMedia + BarcodeDetector / jsQR), manual ID fallback
+// D QR encodes ONLY the machine identifier (…?machine_id=WM-04#/machine/4)
+// E Machine match check → red "Wrong Machine" → back to scanner
+// F 4-digit booking PIN (generated at booking time, never in the QR)
+// G Machine Unlocked ✓ / wrong PIN (3 tries → new code or re-book) / Booking Expired
+
+// ---------- A: booking confirmation ----------
 function bookingConfirmed(b){
   const m=M(b.mid),d=new Date(b.start);
-  showModal(`<div class="ok-ic">${okSvg}</div><h2 style="text-align:center">Booking Confirmed</h2>
+  showModal(`<div class="ok-ic">${okSvg}</div><h2 style="justify-content:center">Booking Confirmed</h2>
     <div class="kv">
       <div><span>Machine</span><b>${esc(m.name)} · ${mcode(m.id)}</b></div>
       <div><span>Date</span><b>${d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'})}</b></div>
-      <div><span>Time</span><b>${range(b).replace(' (tomorrow)','')}</b></div>
+      <div><span>Time slot</span><b>${range(b).replace(' (tomorrow)','')}</b></div>
       <div><span>Wash</span><b>${durName(b.dur)} · ${b.dur} min</b></div>
       <div><span>Status</span><b><span class="badge free"><span class="dot"></span>Confirmed</span></b></div>
     </div>
-    <p style="text-align:center;margin:14px 0 18px">Scan the QR code on your washing machine to unlock it.<br><small>Unlocking opens ${5} min before your slot.</small></p>
-    <button class="btn primary scan-cta" id="goScan">${ic.scan.replace(/16/g,'20')}Scan Machine QR</button>
+    ${b.pin?`<div class="pin-card"><div><small>Your unlock PIN</small><div class="pin-big">${esc(b.pin)}</div></div><small>Enter this at the machine after scanning its QR. It's also saved in <b>My bookings</b>. Don't share it.</small></div>`:''}
+    <p style="text-align:center;margin:14px 0 16px">Scan the QR code on your washing machine to unlock it.<br><small>Unlocking opens 5 min before your slot.</small></p>
+    <button class="btn primary scan-cta" id="goScan">${isz(ic.scan,20)}Scan QR to Unlock</button>
     <div class="actions" style="justify-content:center;margin-top:10px"><button class="btn tonal" data-close>Done</button></div>`);
   $('[data-close]').onclick=closeModal;
-  $('#goScan').onclick=()=>{closeModal();openScanner(b)};
+  $('#goScan').onclick=()=>startUnlock(b);
 }
 const okSvg='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const okAnim='<svg class="ok-anim" width="44" height="44" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="23" fill="none"/><path fill="none" d="M15 27l7 7 15-16"/></svg>';
 
-// ---------- QR parsing: machine identity only ----------
+// ---------- B: checklist, then C ----------
+function startUnlock(b,preScanned){
+  if(!S.bookings.includes(b)){bookingExpiredModal(b);return}
+  if(!API.ok){toast('The unlock service is offline — start the WashQ server (python3 server.py) to use QR unlock');return}
+  if(!prefs.token){loginDialog(()=>startUnlock(b,preScanned),'Sign in to unlock');return}
+  closeModal();
+  checklistDialog(M(b.mid),()=>{closeModal();openScanner(b);if(preScanned)onScanned(preScanned)},closeModal);
+}
+function bookingExpiredModal(b){
+  showModal(`<div class="bad-ic">${isz(ic.x,28)}</div><h2 style="justify-content:center">Booking Expired</h2><p style="text-align:center">This booking is no longer valid — the 10-minute check-in window was missed or it was cancelled.</p>
+    <div class="actions" style="justify-content:center"><button class="btn tonal" data-close>Close</button><button class="btn primary" id="rb">Book again</button></div>`);
+  $('[data-close]').onclick=closeModal;$('#rb').onclick=()=>{closeModal();if(M(b.mid))bookDialog(b.mid)};
+}
+
+// ---------- D: QR parsing — machine identity only ----------
 function parseMachineQR(text){
   const t=String(text||'').trim();let m;
   if((m=t.match(/machine_id=(WM-[A-C]?\d{2,4})/i)))return m[1].toUpperCase();
@@ -3741,63 +3872,93 @@ function parseMachineQR(text){
   return null;
 }
 
-// ---------- full-screen scanner ----------
+// ---------- C: Scan Machine QR screen ----------
 let SC=null;
 function openScanner(b){
-  if(!API.ok){toast('The unlock service is offline — start the WashQ server to use QR unlock');return}
-  if(!prefs.token){loginDialog(()=>openScanner(b),'Sign in to unlock');return}
-  closeModal();closeScanner();
+  closeScanner(true);
   const el=document.createElement('div');el.className='scan';el.id='scan';
   el.innerHTML=`<video playsinline muted autoplay></video>
     <div class="scan-mask"><div class="scan-frame"><i></i><i></i><i></i><i></i><div class="scan-line"></div></div></div>
-    <div class="scan-top"><button class="scan-ib" id="scX" aria-label="Close">${ic.x.replace(/18/g,'22')}</button><div class="scan-title">Scan Machine QR</div>
+    <div class="scan-top"><button class="scan-ib" id="scX" aria-label="Close">${isz(ic.x,22)}</button><div class="scan-title">Scan Machine QR</div>
       <button class="scan-ib" id="scT" aria-label="Flashlight" style="visibility:hidden"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 6l2 5v9h8v-9zM6 6V2h12v4M12 13v2"/></svg></button></div>
-    <div class="scan-bottom"><div class="scan-hint" id="scH">Point your camera at the QR code on <b>${esc(M(b.mid).name)}</b> (${mcode(b.mid)})</div>
+    <div class="scan-bottom">
+      <div class="scan-hint" id="scH">Stand in front of <b>${esc(M(b.mid).name)}</b> (${mcode(b.mid)}) and scan the QR sticker on it.</div>
       <div class="scan-err" id="scE" role="alert"></div>
+      <button class="btn primary scan-open" id="scO">${isz(ic.scan,20)}Open Camera &amp; Scan</button>
       <button class="scan-manual" id="scM">Enter machine ID manually</button></div>
     <div class="scan-sheet" id="scS"></div>`;
   document.body.appendChild(el);document.body.style.overflow='hidden';
-  SC={el,b,stream:null,run:true,torch:false,busy:false,started:Date.now()};
-  $('#scX').onclick=closeScanner;
+  SC={el,b,stream:null,run:false,torch:false,busy:false,started:0};
+  $('#scX').onclick=()=>closeScanner();
   $('#scM').onclick=()=>manualEntry();
-  startCamera();
+  $('#scO').onclick=()=>startCamera();
+  ensureDecoder();   // load the QR decoder up-front so the first scan is instant
 }
-function closeScanner(){
+function closeScanner(instant){
   if(!SC)return;SC.run=false;if(SC.stream)SC.stream.getTracks().forEach(t=>t.stop());
-  SC.el.classList.add('out');const e=SC.el;setTimeout(()=>e.remove(),220);document.body.style.overflow='';SC=null;
+  const e=SC.el;SC=null;document.body.style.overflow='';
+  if(instant)e.remove();else{e.classList.add('out');setTimeout(()=>e.remove(),220)}
 }
-function scanErr(msg,keep){const e=$('#scE');if(!e)return;e.textContent=msg;e.classList.add('on');clearTimeout(scanErr.t);if(!keep)scanErr.t=setTimeout(()=>e.classList.remove('on'),3500)}
+function scanErr(msg,keep){const e=$('#scE');if(!e)return;e.innerHTML=msg;e.classList.add('on');clearTimeout(scanErr.t);if(!keep)scanErr.t=setTimeout(()=>e.classList.remove('on'),3500)}
+let decoderP=null;
+function ensureDecoder(){
+  if(!decoderP)decoderP=(async()=>{
+    if('BarcodeDetector' in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes('qr_code'))return{type:'native',det:new BarcodeDetector({formats:['qr_code']})}}catch(e){}}
+    if(!window.jsQR)await loadScript('vendor/jsqr.min.js');
+    if(!window.jsQR)throw new Error('jsQR missing');
+    return{type:'jsqr'};
+  })().catch(e=>{decoderP=null;throw e});
+  return decoderP;
+}
+function camDenied(){
+  const s=SC;if(!s)return;
+  s.el.classList.remove('live');$('#scO').style.display='none';
+  sheet(`<div class="bad-ic">${isz(ic.x,28)}</div><h2 style="justify-content:center">Camera blocked</h2>
+    <p style="text-align:center">Camera access is needed to scan the machine QR — please allow camera permission.</p>
+    <p style="text-align:center"><small>Tap the camera / lock icon in your browser's address bar, choose <b>Allow</b>, then tap Retry.</small></p>
+    <div class="actions" style="justify-content:center;flex-wrap:wrap"><button class="btn tonal" id="cmM">Enter machine ID</button><button class="btn primary" id="cmR">Retry</button></div>`);
+  $('#cmR').onclick=()=>{hideSheet();startCamera()};$('#cmM').onclick=()=>manualEntry();
+}
+function camUnavailable(reason){
+  const s=SC;if(!s)return;$('#scO').style.display='';$('#scO').innerHTML=isz(ic.scan,20)+'Try camera again';
+  scanErr(`${reason}<br>You can <b>enter the machine ID manually</b> for now.`,true);
+}
 async function startCamera(){
-  const s=SC;
-  if(!window.isSecureContext){scanErr('The camera needs a secure (https) connection. Enter the machine ID manually instead.',true);return}
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){scanErr('This browser can’t open the camera. Enter the machine ID manually instead.',true);return}
+  const s=SC;if(!s)return;
+  $('#scE').classList.remove('on');
+  if(!window.isSecureContext)return camUnavailable('The camera needs a secure (https) connection.');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return camUnavailable('This browser can’t open the camera.');
+  const btn=$('#scO');btn.disabled=true;btn.innerHTML='<span class="spin sm"></span>Opening camera…';
   try{
     s.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
   }catch(e){
-    scanErr(e.name==='NotAllowedError'?'Camera permission was denied. Allow camera access in your browser settings, or enter the machine ID manually.'
-      :e.name==='NotFoundError'?'No camera found on this device. Enter the machine ID manually.':'Couldn’t start the camera ('+e.name+').',true);return}
+    btn.disabled=false;btn.innerHTML=isz(ic.scan,20)+'Open Camera &amp; Scan';
+    let denied=/NotAllowed|PermissionDenied|Security/.test(e.name)||/permission|denied|dismiss/i.test(e.message||'');
+    if(!denied&&navigator.permissions)try{denied=(await navigator.permissions.query({name:'camera'})).state==='denied'}catch(_){}
+    if(denied)return camDenied();
+    return camUnavailable(e.name==='NotFoundError'||e.name==='OverconstrainedError'?'No camera was found on this device.':e.name==='NotReadableError'?'The camera is being used by another app.':'Couldn’t start the camera.');
+  }
   if(!SC||SC!==s){s.stream.getTracks().forEach(t=>t.stop());return}
+  btn.style.display='none';btn.disabled=false;
   const v=s.el.querySelector('video');v.srcObject=s.stream;try{await v.play()}catch(e){}
-  s.el.classList.add('live');
+  s.el.classList.add('live');s.run=true;s.started=Date.now();
+  $('#scH').innerHTML=`Point your camera at the QR code on <b>${esc(M(s.b.mid).name)}</b> — it scans automatically.`;
   const track=s.stream.getVideoTracks()[0],caps=track.getCapabilities?track.getCapabilities():{};
   if(caps.torch){const t=$('#scT');t.style.visibility='visible';t.onclick=async()=>{try{s.torch=!s.torch;await track.applyConstraints({advanced:[{torch:s.torch}]});t.classList.toggle('on',s.torch)}catch(e){scanErr('Flashlight isn’t available')}}}
-  let detector=null;
-  if('BarcodeDetector' in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes('qr_code'))detector=new BarcodeDetector({formats:['qr_code']})}catch(e){}}
-  if(!detector&&!window.jsQR){try{await loadScript('vendor/jsqr.min.js')}catch(e){scanErr('QR decoder failed to load. Enter the machine ID manually.',true);return}}
+  let dec;try{dec=await ensureDecoder()}catch(e){return camUnavailable('The QR decoder failed to load.')}
   const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
   let last=0,hinted=false;
   const loop=async ts=>{
     if(!SC||SC!==s||!s.run)return;
-    if(ts-last>110&&!s.busy&&v.readyState>=2){last=ts;
-      let text=null;
+    if(ts-last>110&&!s.busy&&v.readyState>=2){last=ts;let text=null;
       try{
-        if(detector){const r=await detector.detect(v);if(r[0])text=r[0].rawValue}
+        if(dec.type==='native'){const r=await dec.det.detect(v);if(r[0])text=r[0].rawValue}
         else{const vw=v.videoWidth,vh=v.videoHeight,side=Math.min(vw,vh)*.8,sc=Math.min(1,560/side);
           cv.width=cv.height=Math.round(side*sc);cx.drawImage(v,(vw-side)/2,(vh-side)/2,side,side,0,0,cv.width,cv.height);
-          const r=jsQR(cx.getImageData(0,0,cv.width,cv.height).data,cv.width,cv.height,{inversionAttempts:'dontInvert'});if(r)text=r.data}
+          const r=jsQR(cx.getImageData(0,0,cv.width,cv.height).data,cv.width,cv.height,{inversionAttempts:'attemptBoth'});if(r)text=r.data}
       }catch(e){}
       if(text)onScanned(text);
-      if(!hinted&&Date.now()-s.started>15000){hinted=true;$('#scH').innerHTML='Having trouble? Make sure the code is well lit and fills the frame.'}
+      if(!hinted&&Date.now()-s.started>15000){hinted=true;$('#scH').innerHTML='Having trouble? Make sure the code is well lit and fills the frame — or enter the machine ID manually.'}
     }
     requestAnimationFrame(loop);
   };
@@ -3809,71 +3970,126 @@ function onScanned(text){
   if(!SC||SC.busy)return;
   const code=parseMachineQR(text);
   if(!code){if(lastBad!==text){lastBad=text;scanErr('This QR code isn’t a WashQ machine code. Scan the sticker on the washing machine.')}return}
-  SC.busy=true;SC.el.classList.add('hit');if(navigator.vibrate)navigator.vibrate(60);beep(1);
-  setTimeout(()=>verifyMachine(SC.b,code),350);
+  SC.busy=true;if(navigator.vibrate)navigator.vibrate(60);
+  // E(1): immediate client-side match check — no unlock, no password on mismatch
+  if(code!==mcode(SC.b.mid)){wrongMachine(code);return}
+  SC.el.classList.add('hit');beep(1);
+  setTimeout(()=>verifyMachine(SC.b,code),300);
 }
 function manualEntry(){
   if(!SC)return;
-  sheet(`<h2>Enter machine ID</h2><p>It’s printed under the QR code, e.g. ${mcode(SC.b.mid)}.</p>
-    <form id="mf"><div class="field"><input id="mi" placeholder="WM-04" autocapitalize="characters" maxlength="8" required></div>
+  sheet(`<h2>Enter machine ID</h2><p>It’s printed under the QR code, e.g. ${mcode(SC.b.mid)}. Use this only if the camera isn’t working.</p>
+    <form id="mf"><div class="field"><input id="mi" placeholder="${mcode(SC.b.mid)}" autocapitalize="characters" maxlength="8" required></div>
     <div class="actions"><button type="button" class="btn tonal" id="mc">Back to camera</button><button class="btn primary">Verify</button></div></form>`);
   setTimeout(()=>$('#mi')&&$('#mi').focus(),80);
   $('#mc').onclick=()=>hideSheet();
-  $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const mm=raw.match(/^([A-C])?(\d{1,4})$/);const code=mm?(mm[1]?'WM-'+mm[1]+mm[2].padStart(2,'0'):mcode(+mm[2])):null;
-    if(!code){toast('Enter a valid machine ID like WM-04');return}SC.busy=true;verifyMachine(SC.b,code)};
+  $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const mm=raw.match(/^([A-C])?(\d{1,4})$/);
+    const code=mm?(mm[1]?'WM-'+mm[1]+mm[2].padStart(2,'0'):mcode(+mm[2])):null;
+    if(!code){toast('Enter a valid machine ID like '+mcode(SC.b.mid));return}
+    SC.busy=false;onScanned(code)};
 }
 function sheet(html){const s=$('#scS');if(!s)return;s.innerHTML=`<div class="dialog">${html}</div>`;s.classList.add('on')}
-function hideSheet(){const s=$('#scS');if(s){s.classList.remove('on');s.innerHTML=''}if(SC){SC.busy=false;SC.el.classList.remove('hit')}}
+function hideSheet(){const s=$('#scS');if(s){s.classList.remove('on');s.innerHTML=''}if(SC){SC.busy=false;SC.el.classList.remove('hit','wrong')}}
 
-// ---------- verification → password → unlock ----------
+// ---------- E: wrong machine → back to scanner ----------
+function wrongMachine(code){
+  const b=SC.b,m=M(b.mid);SC.el.classList.add('wrong');beep(2);
+  sheet(`<div class="bad-ic">${isz(ic.x,28)}</div><h2 class="err-t" style="justify-content:center">Wrong Machine</h2>
+    <p style="text-align:center">You scanned <b>${esc(code)}</b>, but your booking is for <b>${esc(m?m.name:'')} (${mcode(b.mid)})</b>.<br>Go to the correct machine and scan its QR code.</p>
+    <button class="btn primary scan-cta" id="wmB">Back to scanner</button>
+    <div class="sub" style="text-align:center;font-size:12px;margin-top:10px">Returning to the scanner in <span id="wmT">4</span>s</div>`);
+  let n=4;const t=setInterval(()=>{n--;const el=$('#wmT');if(!el){clearInterval(t);return}el.textContent=n;if(n<=0){clearInterval(t);back()}},1000);
+  const back=()=>{clearInterval(t);hideSheet();if(SC&&!SC.stream)$('#scO').style.display=''};
+  $('#wmB').onclick=back;
+}
+
+// ---------- E(2): server verification ----------
 async function verifyMachine(b,code){
-  if(!SC){openScanner(b);if(!SC)return;SC.busy=true}
-  sheet(`<div class="spin"></div><p style="text-align:center;margin:14px 0 4px">Verifying ${esc(code)}…</p>`);
+  if(!SC)return;
+  sheet(`<div class="spin"></div><p style="text-align:center;margin:14px 0 4px">Verifying ${esc(code)} and your booking…</p>`);
   try{
     const r=await api('POST','/api/verify',{booking_id:b.sid,machine_id:code});
-    if(SC&&SC.stream){SC.stream.getTracks().forEach(t=>t.stop());SC.el.classList.remove('live')}
-    passwordStep(b,code,r);
+    if(SC&&SC.stream){SC.run=false;SC.stream.getTracks().forEach(t=>t.stop());SC.stream=null;SC.el.classList.remove('live')}
+    pinStep(b,code,r);
   }catch(e){
-    if(e.status===401&&e.code==='auth'){closeScanner();loginDialog(()=>openScanner(b),'Sign in to unlock');return}
-    sheet(`<div class="bad-ic">${ic.x.replace(/18/g,'28')}</div><h2 style="text-align:center">Can’t unlock</h2><p style="text-align:center">${esc(e.message)}</p>
+    if(e.status===401&&e.code==='auth'){closeScanner();loginDialog(()=>startUnlock(b),'Sign in to unlock');return}
+    if(e.code==='wrong_machine'){wrongMachine(code);return}
+    if(e.code==='expired'||e.code==='used'||e.code==='no_booking')return expiredSheet(b,e);
+    sheet(`<div class="bad-ic">${isz(ic.x,28)}</div><h2 style="justify-content:center">Can’t unlock</h2><p style="text-align:center">${esc(e.message)}</p>
       <div class="actions" style="justify-content:center"><button class="btn tonal" id="eC">Close</button><button class="btn primary" id="eR">Scan again</button></div>`);
-    $('#eC').onclick=closeScanner;$('#eR').onclick=()=>hideSheet();
+    $('#eC').onclick=()=>closeScanner();$('#eR').onclick=()=>hideSheet();
   }
 }
-function passwordStep(b,code,v){
+function expiredSheet(b,e){
+  const used=e&&e.code==='used';
+  sheet(`<div class="bad-ic">${isz(ic.x,28)}</div><h2 class="err-t" style="justify-content:center">${used?'Already used':'Booking Expired'}</h2>
+    <p style="text-align:center">${used?'This booking has already been used to unlock the machine.':'This booking is no longer valid — the 10-minute check-in window was missed or it was cancelled.'}</p>
+    <div class="actions" style="justify-content:center"><button class="btn tonal" id="exC">Close</button>${used?'':'<button class="btn primary" id="exB">Book again</button>'}</div>`);
+  if(!used){S.bookings=S.bookings.filter(x=>x.id!==b.id);const m=M(b.mid);if(m&&m.hold&&m.hold.bookingId===b.id)m.hold=null;save();lastKey='';render()}
+  $('#exC').onclick=()=>closeScanner();const bb=$('#exB');if(bb)bb.onclick=()=>{closeScanner();if(M(b.mid))bookDialog(b.mid)};
+}
+
+// ---------- F: 4-digit booking PIN ----------
+function pinStep(b,code,v){
   const m=M(b.mid);let ticket=v.ticket,exp=Date.now()+v.expires_in*1000;
   sheet(`<div class="ok-ic">${okSvg}</div>
-    <div style="text-align:center"><div class="sub" style="font-size:13px">Machine Verified</div><div class="vcode">${esc(code)}</div><p style="margin:0 0 18px">Your booking is valid.<br><small>${esc(m?m.name:v.booking.machine_name)} · ${range({start:v.booking.start,dur:v.booking.dur})}</small></p></div>
-    <form id="uf"><div class="field"><label>Enter Password</label><input id="up" type="password" autocomplete="current-password" placeholder="Your WashQ password" required></div>
-    <div class="msg" id="um"></div>
-    <button class="btn primary scan-cta" id="ub">${ic.lock}Unlock Machine</button>
-    <div class="sub" style="text-align:center;font-size:12px;margin-top:10px">Verification valid for <span id="ut">2:00</span> · <button type="button" class="link" id="ux">Cancel</button></div></form>`);
-  setTimeout(()=>$('#up')&&$('#up').focus(),120);
-  $('#ux').onclick=closeScanner;
-  const tk=setInterval(()=>{const el=$('#ut');if(!el){clearInterval(tk);return}const s=Math.max(0,Math.ceil((exp-Date.now())/1000));el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');if(!s){clearInterval(tk);$('#um').className='msg err';$('#um').textContent='Verification expired. Please scan the machine QR again.';$('#ub').disabled=true}},500);
-  $('#uf').onsubmit=async e=>{e.preventDefault();const btn=$('#ub'),msg=$('#um');
-    btn.disabled=true;btn.innerHTML='<span class="spin sm"></span>Unlocking…';msg.textContent='';
-    try{
-      await api('POST','/api/unlock',{ticket,password:$('#up').value});
-      clearInterval(tk);unlocked(b,code);
-    }catch(er){
-      btn.disabled=false;btn.innerHTML=ic.lock+'Unlock Machine';$('#up').value='';$('#up').focus();
-      msg.className='msg err';msg.textContent=er.message;
-      const f=$('#uf');f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');
-      if(er.code==='ticket'||er.code==='locked'||er.code==='expired'||er.code==='used'){btn.disabled=true;
-        if(er.code==='ticket'){msg.insertAdjacentHTML('beforeend',' <button type="button" class="link" id="rs">Scan again</button>');$('#rs').onclick=()=>{closeScanner();openScanner(b)}}}
-    }};
+    <div style="text-align:center"><div class="sub" style="font-size:13px">Machine Verified</div><div class="vcode">${esc(code)}</div><p style="margin:0 0 16px">Your booking is valid.<br><small>${esc(m?m.name:v.booking.machine_name)} · ${range({start:v.booking.start,dur:v.booking.dur})}</small></p></div>
+    <div id="pinArea"></div>
+    <div class="sub" style="text-align:center;font-size:12px;margin-top:10px">Verification valid for <span id="ut">2:00</span> · <button type="button" class="link" id="ux">Cancel</button></div>`);
+  $('#ux').onclick=()=>closeScanner();
+  const tk=setInterval(()=>{const el=$('#ut');if(!el){clearInterval(tk);return}const s=Math.max(0,Math.ceil((exp-Date.now())/1000));el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    if(!s){clearInterval(tk);$('#pinArea').innerHTML=`<div class="msg err">Verification expired. Please scan the machine QR again.</div><button class="btn primary scan-cta" id="rs">Scan again</button>`;$('#rs').onclick=()=>{closeScanner(true);openScanner(b)}}},500);
+  const entry=(left,note)=>{
+    $('#pinArea').innerHTML=`<label class="pin-lbl">Enter your 4-digit unlock PIN</label>
+      <div class="otp-in" id="pb">${[0,1,2,3].map(i=>`<input type="password" inputmode="numeric" maxlength="1" aria-label="PIN digit ${i+1}" autocomplete="one-time-code">`).join('')}</div>
+      <div class="msg ${note?'ok':''}" id="um">${note||''}</div>
+      <button class="btn primary scan-cta" id="ub">${ic.lock}Unlock Machine</button>
+      <div class="sub" style="text-align:center;font-size:12px;margin-top:8px">${left} attempt${left!==1?'s':''} · PIN shown when you booked (also in My bookings)</div>`;
+    const boxes=[...document.querySelectorAll('#pb input')];
+    boxes.forEach((x,i)=>{x.oninput=()=>{x.value=x.value.replace(/\D/g,'').slice(-1);if(x.value&&i<3)boxes[i+1].focus();if(boxes.every(y=>y.value))go()};
+      x.onkeydown=e=>{if(e.key==='Backspace'&&!x.value&&i>0)boxes[i-1].focus();if(e.key==='Enter')go()};
+      x.onpaste=e=>{const t=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,4);if(t){e.preventDefault();t.split('').forEach((c,j)=>boxes[j].value=c);if(t.length===4)go()}}});
+    setTimeout(()=>boxes[0].focus(),120);
+    let busy=false;
+    async function go(){
+      if(busy)return;const pin=boxes.map(x=>x.value).join(''),msg=$('#um'),btn=$('#ub');
+      if(pin.length<4){msg.className='msg err';msg.textContent='Enter all 4 digits';return}
+      busy=true;btn.disabled=true;btn.innerHTML='<span class="spin sm"></span>Unlocking…';msg.textContent='';
+      try{await api('POST','/api/unlock',{ticket,pin});clearInterval(tk);unlocked(b,code)}
+      catch(er){busy=false;btn.disabled=false;btn.innerHTML=ic.lock+'Unlock Machine';boxes.forEach(x=>x.value='');
+        const pb=$('#pb');pb.classList.remove('err');void pb.offsetWidth;pb.classList.add('err');
+        if(er.code==='pin_locked')return locked(er.message);
+        if(er.code==='expired'||er.code==='used'){clearInterval(tk);return expiredSheet(b,er)}
+        if(er.code==='ticket'){clearInterval(tk);msg.className='msg err';msg.innerHTML=esc(er.message)+' <button type="button" class="link" id="rs">Scan again</button>';$('#rs').onclick=()=>{closeScanner(true);openScanner(b)};return}
+        msg.className='msg err';msg.textContent=er.message;boxes[0].focus()}
+    }
+    $('#ub').onclick=go;
+  };
+  const locked=message=>{
+    $('#pinArea').innerHTML=`<div class="msg err" style="margin-bottom:12px">${esc(message)}</div>
+      <div class="actions" style="justify-content:center;flex-wrap:wrap"><button class="btn tonal" id="rbk">Re-book</button><button class="btn primary" id="rgn">Generate new code</button></div>`;
+    $('#rbk').onclick=()=>{closeScanner();if(M(b.mid))bookDialog(b.mid)};
+    $('#rgn').onclick=async()=>{const x=$('#rgn');x.disabled=true;x.textContent='Generating…';
+      try{const r=await api('POST','/api/bookings/'+b.sid+'/pin');b.pin=r.pin;save();lastKey='';render();entry(3,`New unlock PIN: <b class="pin-inline">${esc(r.pin)}</b> (saved in My bookings)`)}
+      catch(er){x.disabled=false;x.textContent='Generate new code';if(er.code==='expired')return expiredSheet(b,er);toast(er.message)}};
+  };
+  if(v.pin_locked)locked('Too many incorrect attempts. Generate a new code or re-book to continue.');else entry(v.attempts_left??3);
 }
+
+// ---------- G: unlocked ----------
 function unlocked(b,code){
   b.unlocked=true;
   const m=M(b.mid);
   if(m&&m.state==='free'){startWash(m,b.dur,b.name,b.id)}else{S.bookings=S.bookings.filter(x=>x.id!==b.id);if(m&&m.hold&&m.hold.bookingId===b.id)m.hold=null;save();lastKey='';render()}
   if(navigator.vibrate)navigator.vibrate([80,60,80]);beep(2);
-  sheet(`<div class="ok-ic big">${okSvg}</div><h2 style="text-align:center">Machine Unlocked ✓</h2>
+  sheet(`<div class="ok-ic big">${okAnim}</div><h2 style="justify-content:center">Machine Unlocked ✓</h2>
     <p style="text-align:center">Your washing machine is ready to use.<br><small>${esc(code)} · ${durName(b.dur)} · ${b.dur} min timer started</small></p>
     <button class="btn primary scan-cta" id="ud">Done</button>`);
   $('#ud').onclick=()=>{closeScanner();location.hash='#/machine/'+b.mid};
 }
+
+// debug/test handle (read-only helpers; no secrets)
+window.WQ={get S(){return S},set S(v){S=v},save,render:()=>{lastKey='';render()},startUnlock,openScanner,parseMachineQR,setMood};
 
 initBlockSel();
 parseRoute();

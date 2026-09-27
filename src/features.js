@@ -12,17 +12,45 @@ Object.assign(ic,{
   info:svgI('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',14)
 });
 
-// ---------- block switcher ----------
+// ---------- block switcher (custom dropdown: solid panel, elevated, scrim, click-outside closes) ----------
+function blockStats(b){
+  const s=b===BLOCK?S:loadBlock(b),n=s.machines.length,free=s.machines.filter(m=>m.state==='free'&&!m.hold).length;return{n,free};
+}
+function switchBlock(b){
+  if(b===BLOCK)return;
+  save();BLOCK=b;prefs.block=b;savePrefs();S=loadBlock(b);save();
+  closeModal();if(typeof closeScanner==='function')closeScanner(true);
+  if(route==='machine'&&!M(param))location.hash='#/';
+  $('#banners').dataset.k='x';$('#blockLbl').textContent='Block '+b;lastKey='';render();pollSensor();
+  toast(`Showing Block ${b} · ${S.machines.length} machines`);
+}
 function initBlockSel(){
-  const sel=$('#blockSel');sel.value=BLOCK;
-  sel.onchange=()=>{
-    const b=sel.value;if(b===BLOCK)return;
-    save();BLOCK=b;prefs.block=b;savePrefs();S=loadBlock(b);save();
-    closeModal();if(typeof closeScanner==='function')closeScanner();
-    if(route==='machine'&&!M(param))location.hash='#/';
-    $('#banners').dataset.k='x';lastKey='';render();pollSensor();
-    toast(`Showing Block ${b} · ${S.machines.length} machines`);
+  const btn=$('#blockBtn'),menu=$('#blockMenu'),scrim=$('#blockScrim');
+  $('#blockLbl').textContent='Block '+BLOCK;
+  const items=()=>[...menu.querySelectorAll('[role=option]')];
+  const open=()=>{
+    menu.innerHTML=Object.keys(BLOCKS).map(b=>{const st=blockStats(b);return`<button type="button" role="option" class="block-opt ${b===BLOCK?'sel':''}" aria-selected="${b===BLOCK}" data-b="${b}">
+      <span class="bo-ic">${b}</span><span class="bo-t"><b>Block ${b}</b><small>${st.n} machines · ${st.free} free now</small></span>${b===BLOCK?ic.check:''}</button>`}).join('');
+    const hb=document.querySelector('header').getBoundingClientRect().bottom,wt=$('#blockWrap').getBoundingClientRect().top;menu.style.top=(hb-wt+8)+'px';   // 8px below the nav bar
+    menu.hidden=false;scrim.hidden=false;document.body.classList.add('menu-open');btn.setAttribute('aria-expanded','true');
+    requestAnimationFrame(()=>{menu.classList.add('on');scrim.classList.add('on')});
+    (menu.querySelector('.sel')||items()[0]).focus();
   };
+  const close=(focusBtn)=>{
+    if(menu.hidden)return;menu.classList.remove('on');scrim.classList.remove('on');btn.setAttribute('aria-expanded','false');
+    document.body.classList.remove('menu-open');setTimeout(()=>{if(!menu.classList.contains('on')){menu.hidden=true;scrim.hidden=true}},180);
+    if(focusBtn)btn.focus();
+  };
+  btn.onclick=e=>{e.stopPropagation();menu.hidden?open():close()};
+  scrim.onclick=()=>close();
+  menu.onclick=e=>{const o=e.target.closest('[data-b]');if(!o)return;close(true);switchBlock(o.dataset.b)};
+  menu.onkeydown=e=>{const it=items(),i=it.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'){e.preventDefault();it[(i+1)%it.length].focus()}
+    else if(e.key==='ArrowUp'){e.preventDefault();it[(i-1+it.length)%it.length].focus()}
+    else if(e.key==='Escape'||e.key==='Tab'){e.preventDefault();close(true)}};
+  btn.onkeydown=e=>{if(e.key==='ArrowDown'&&menu.hidden){e.preventDefault();open()}};
+  document.addEventListener('click',e=>{if(!menu.hidden&&!e.target.closest('#blockWrap'))close()});
+  window.addEventListener('hashchange',()=>close());
 }
 
 // ---------- report issue / maintenance ----------
@@ -104,11 +132,12 @@ function greenInfo(){
 }
 
 // ---------- detergent / load checklist (before OTP) ----------
-function checklistDialog(m,next){
+function checklistDialog(m,next,onCancel){
   const items=[['Detergent added','Right amount in the drawer'],['Pockets checked','No coins, pens or tissues'],['Load balanced','Not over-filled, spread evenly']];
   showModal(`<h2>Quick check before you start</h2><p>Takes two seconds and helps avoid re-washes and stuck machines.</p>
     <div class="opts checks">${items.map(([t,d],i)=>`<label class="opt"><input type="checkbox" ${prefs.checks&&prefs.checks[i]?'checked':''}><div><b>${t}</b><small>${d}</small></div></label>`).join('')}</div>
-    <div class="actions"><button class="btn tonal" data-act="release" data-id="${m.id}">Cancel</button><button class="btn primary" id="ckGo">${ic.check}Got it, continue</button></div>`);
+    <div class="actions"><button class="btn tonal" ${onCancel?'id="ckNo"':`data-act="release" data-id="${m.id}"`}>Cancel</button><button class="btn primary" id="ckGo">${ic.check}Got it, continue</button></div>`);
+  if(onCancel)$('#ckNo').onclick=onCancel;
   $('#ckGo').onclick=()=>{prefs.checks=[...document.querySelectorAll('.checks input')].map(c=>c.checked);savePrefs();next()};
   setTimeout(()=>$('#ckGo')&&$('#ckGo').focus(),60);
 }

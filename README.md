@@ -33,3 +33,26 @@ Book Slot → Booking Confirmed → **Scan Machine QR** (full-screen camera, tor
 
 ## Develop
 Edit the files in `src/`, then run `src/build.sh` to regenerate `index.html`.
+
+## v8 fixes
+
+**Block dropdown.** A custom listbox replaces the native `<select>`.
+- Nearly solid frosted panel: `rgba(255,255,255,.97)` in light mode, `rgba(30,32,46,.98)` in dark.
+- Shadow `0 8px 24px rgba(0,0,0,.15)`, 16px radius, z-index 100.
+- Opens 8px below the nav bar.
+- A `rgba(0,0,0,.2)` scrim appears while it's open. Clicking outside or pressing Esc closes it; arrow keys move between blocks.
+- Each block shows its live free count.
+
+**QR unlock flow.** Booking Confirmed → quick checklist → Scan Machine QR → Open Camera & Scan (getUserMedia + jsQR).
+- The QR holds only the machine ID.
+- Scanning another machine shows a red "Wrong Machine" and returns to the scanner.
+- A 4-digit PIN is created at booking. The server stores only a salted HMAC of it, and it's shown in My bookings.
+- 3 wrong PINs lock the booking; you can then generate a new code (up to 5 times) or re-book.
+- Success shows "Machine Unlocked ✓" with an animated check and starts the timer.
+- Missing the 10-minute check-in window shows "Booking Expired".
+- If camera permission is denied, a message with Retry appears. You can always enter the machine ID manually instead.
+
+**Dynamic background.** The share of free machines is recomputed on every render and theme change.
+- The colour blends continuously: amber/red at 0%, blue/purple at 50%, green/teal at 100%, with separate light and dark palettes.
+- It's written to `--bg-gradient-start/-mid/-end` on `:root`. These are registered with `@property`, so they fade over 1.5s.
+- The percentage is logged to the console as `[WashQ] ambient: …`.

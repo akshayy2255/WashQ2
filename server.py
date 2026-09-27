@@ -12,10 +12,12 @@ Security model
   * QR codes carry only a public machine identifier (e.g. machine_id=WM-04).
   * /api/verify     session + booking owner + machine match + time window + unused
                     credential  → short-lived single-use "unlock ticket" (2 min)
-  * /api/unlock     session + ticket + password, re-checks everything, then consumes
+  * Each booking also gets a 4-digit unlock PIN, shown to the booking user once
+    (only a salted HMAC is stored). It is NOT in the QR code.
+  * /api/unlock     session + ticket + booking PIN, re-checks everything, then consumes
                     the credential and sends the unlock command to the controller.
-  * Rate limits: sign-in 8 fails / 10 min per room+IP; unlock 5 wrong passwords per
-    booking → 5 min lockout.
+  * Rate limits: sign-in 8 fails / 10 min per room+IP; 3 wrong PINs lock the booking PIN
+    until the owner generates a new code (max 5 per booking) or re-books.
 """
 import hashlib, hmac, json, os, re, secrets, sys, threading, time, urllib.request
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
@@ -26,12 +28,15 @@ CONTROLLER_URL = os.environ.get("WASHQ_CONTROLLER_URL")   # e.g. http://controll
 EARLY_MIN = 5          # can unlock up to 5 min before slot start
 LATE_MIN = 10          # …and until 10 min after slot start (matches the no-show window)
 TICKET_TTL = 120
-MAX_UNLOCK_FAILS, UNLOCK_LOCK_S = 5, 300
+MAX_PIN_FAILS = 3          # wrong PINs before the booking PIN is locked (new code or re-book required)
+MAX_PIN_REGEN = 5
 MAX_LOGIN_FAILS, LOGIN_WINDOW_S = 8, 600
 LOCK = threading.Lock()
 
 def now_ms(): return int(time.time() * 1000)
 def sha(s): return hashlib.sha256(s.encode()).hexdigest()
+def pin_hash(pin, salt): return hmac.new(bytes.fromhex(salt), str(pin).encode(), hashlib.sha256).hexdigest()
+def new_pin(): return f"{secrets.randbelow(10000):04d}"
 def pw_hash(pw, salt): return hashlib.pbkdf2_hmac("sha256", pw.encode(), bytes.fromhex(salt), 200_000).hex()
 
 def load():
@@ -82,12 +87,10 @@ def check_booking_usable(b, user_id, machine_id):
     if b["used"]: raise ApiError(409, "used", "This booking has already been used to unlock the machine.")
     if b["machine_id"] != machine_id:
         raise ApiError(409, "wrong_machine", f"Wrong machine. You scanned {machine_id}, but your booking is for {b['machine_id']} ({b['machine_name']}).")
-    if t > b["start"] + LATE_MIN * 60000: raise ApiError(410, "expired", "Your booking has expired. Please book a new slot.")
+    if t > b["start"] + LATE_MIN * 60000: raise ApiError(410, "expired", "Booking Expired — the 10-minute check-in window was missed. Please book a new slot.")
     if t < b["start"] - EARLY_MIN * 60000:
         mins = int((b["start"] - EARLY_MIN * 60000 - t) / 60000) + 1
         raise ApiError(425, "too_early", f"Too early — you can unlock from {EARLY_MIN} minutes before your slot (in about {mins} min).")
-    if b.get("locked_until", 0) > t:
-        raise ApiError(429, "locked", f"Too many incorrect attempts. Try again in {int((b['locked_until'] - t) / 1000) + 1} seconds.")
 
 class H(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw): super().__init__(*a, directory=ROOT, **kw)
@@ -186,10 +189,24 @@ class H(SimpleHTTPRequestHandler):
                 if b["machine_id"] == mid and b["status"] == "confirmed" and not b["used"] and start < b["start"] + b["dur"] * 60000 and b["start"] < end:
                     raise ApiError(409, "overlap", "That slot overlaps an existing booking.")
             cred = secrets.token_urlsafe(24)          # one-time unlock credential — server-side only
+            pin, psalt = new_pin(), secrets.token_hex(8)   # 4-digit unlock PIN — returned once to the owner
             b = {"id": "bk_" + secrets.token_hex(8), "user": u["id"], "machine_id": mid, "machine_name": str(d.get("machine_name", mid))[:40],
-                 "start": start, "dur": dur, "status": "confirmed", "created": now_ms(), "cred": sha(cred), "used": False, "fails": 0, "locked_until": 0}
+                 "start": start, "dur": dur, "status": "confirmed", "created": now_ms(), "cred": sha(cred), "used": False,
+                 "pin_salt": psalt, "pin_hash": pin_hash(pin, psalt), "pin_fails": 0, "pin_locked": False, "pin_regens": 0}
             DB["bookings"][b["id"]] = b; audit("book", user=u["id"], booking=b["id"], machine=mid)
-            return {"booking": public_booking(b)}
+            return {"booking": public_booking(b), "pin": pin}
+
+        m = re.match(r"^/api/bookings/(bk_[0-9a-f]+)/pin$", path)
+        if m and method == "POST":            # generate a new unlock code (after 3 wrong attempts, or lost)
+            b = DB["bookings"].get(m.group(1))
+            if not b or b["user"] != u["id"] or b["status"] == "cancelled": raise ApiError(404, "no_booking", "Booking not found")
+            if b["used"]: raise ApiError(409, "used", "This booking has already been used to unlock the machine.")
+            if now_ms() > b["start"] + LATE_MIN * 60000: raise ApiError(410, "expired", "Booking Expired — please book a new slot.")
+            if b.get("pin_regens", 0) >= MAX_PIN_REGEN: raise ApiError(429, "regen_limit", "Too many new codes for this booking. Please re-book.")
+            pin = new_pin(); b["pin_salt"] = secrets.token_hex(8); b["pin_hash"] = pin_hash(pin, b["pin_salt"])
+            b["pin_fails"] = 0; b["pin_locked"] = False; b["pin_regens"] = b.get("pin_regens", 0) + 1
+            audit("pin_regen", user=u["id"], booking=b["id"])
+            return {"pin": pin, "booking": public_booking(b)}
 
         m = re.match(r"^/api/bookings/(bk_[0-9a-f]+)$", path)
         if m and method == "DELETE":
@@ -210,7 +227,7 @@ class H(SimpleHTTPRequestHandler):
             t = secrets.token_urlsafe(24)
             DB["tickets"][sha(t)] = {"booking": b["id"], "user": u["id"], "session": sid, "machine": mid, "cred": b["cred"], "exp": now_ms() + TICKET_TTL * 1000}
             audit("verify", user=u["id"], booking=b["id"], machine=mid)
-            return {"ticket": t, "expires_in": TICKET_TTL, "booking": public_booking(b)}
+            return {"ticket": t, "expires_in": TICKET_TTL, "booking": public_booking(b), "pin_locked": b.get("pin_locked", False), "attempts_left": MAX_PIN_FAILS - b.get("pin_fails", 0)}
 
         if path == "/api/unlock" and method == "POST":
             d = self.body()
@@ -220,17 +237,20 @@ class H(SimpleHTTPRequestHandler):
             b = DB["bookings"].get(tk["booking"])
             check_booking_usable(b, u["id"], tk["machine"])            # re-check everything at unlock time
             if not hmac.compare_digest(tk["cred"], b["cred"]): raise ApiError(401, "cred", "Unlock credential is invalid.")
-            if not hmac.compare_digest(u["pw"], pw_hash(str(d.get("password", "")), u["salt"])):
-                b["fails"] += 1
-                left = MAX_UNLOCK_FAILS - b["fails"]
+            if b.get("pin_locked"):
+                raise ApiError(423, "pin_locked", "Too many incorrect attempts. Generate a new code or re-book to continue.")
+            pin = str(d.get("pin", ""))
+            if not re.fullmatch(r"\d{4}", pin) or not hmac.compare_digest(b.get("pin_hash", ""), pin_hash(pin, b.get("pin_salt", "00"))):
+                b["pin_fails"] = b.get("pin_fails", 0) + 1
+                left = MAX_PIN_FAILS - b["pin_fails"]
                 audit("unlock_fail", user=u["id"], booking=b["id"])
                 if left <= 0:
-                    b["fails"] = 0; b["locked_until"] = now_ms() + UNLOCK_LOCK_S * 1000
-                    raise ApiError(429, "locked", f"Too many incorrect attempts. Unlocking is blocked for {UNLOCK_LOCK_S // 60} minutes.")
-                raise ApiError(401, "bad_password", f"Incorrect password. Please try again. ({left} attempt{'s' if left != 1 else ''} left)")
+                    b["pin_locked"] = True
+                    raise ApiError(423, "pin_locked", "Incorrect PIN entered 3 times. Generate a new code or re-book to continue.")
+                raise ApiError(401, "bad_pin", f"Incorrect PIN. Please try again. ({left} attempt{'s' if left != 1 else ''} left)")
             if not send_unlock_command(b["machine_id"], b["id"]):
                 raise ApiError(502, "controller", "Couldn't reach the machine controller. Please try again.")
-            b["used"] = True; b["status"] = "used"; b["cred"] = sha(secrets.token_hex(16)); b["fails"] = 0   # one-time: burn credential
+            b["used"] = True; b["status"] = "used"; b["cred"] = sha(secrets.token_hex(16)); b["pin_hash"] = ""   # one-time: burn credential + PIN
             DB["tickets"].pop(sha(str(d.get("ticket", ""))), None)
             audit("unlock", user=u["id"], booking=b["id"], machine=b["machine_id"])
             return {"ok": True, "machine_id": b["machine_id"], "booking": public_booking(b)}

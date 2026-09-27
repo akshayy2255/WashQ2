@@ -1,0 +1,59 @@
+
+/* ===== v7 fixes ===== */
+/* --- 3. ambient background driven by JS-set CSS variables --- */
+@property --bg-gradient-start{syntax:'<color>';inherits:true;initial-value:#a5b4fc}
+@property --bg-gradient-mid{syntax:'<color>';inherits:true;initial-value:#d8b4fe}
+@property --bg-gradient-end{syntax:'<color>';inherits:true;initial-value:#93c5fd}
+:root{transition:--bg-gradient-start 1.5s ease,--bg-gradient-mid 1.5s ease,--bg-gradient-end 1.5s ease,--a4 1.5s ease}
+body::before{
+  background:
+    radial-gradient(40% 45% at 18% 22%,var(--bg-gradient-start) 0%,transparent 70%),
+    radial-gradient(38% 42% at 82% 18%,var(--bg-gradient-mid) 0%,transparent 70%),
+    radial-gradient(45% 50% at 70% 85%,var(--bg-gradient-end) 0%,transparent 70%),
+    radial-gradient(35% 40% at 12% 88%,var(--bg-gradient-mid) 0%,transparent 70%),
+    var(--a4);
+  transition:background 1.5s ease;
+}
+[data-theme=dark] body::before{opacity:.85}
+
+/* --- 1. block dropdown --- */
+.block-wrap{position:relative}
+.block-sel{display:inline-flex;align-items:center}
+.block-sel[aria-expanded=true]{border-color:var(--primary);background-color:var(--glass-strong)}
+.block-scrim{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.2);opacity:0;transition:opacity .18s ease}
+.block-scrim.on{opacity:1}
+body.menu-open header{z-index:100}
+main,#banners,h1{position:relative;z-index:1}
+.block-menu{position:absolute;top:calc(100% + 8px);left:0;z-index:100;min-width:260px;padding:6px;
+  border-radius:var(--r-lg);border:1px solid var(--glass-border);
+  background:rgba(255,255,255,.97);box-shadow:0 8px 24px rgba(0,0,0,.15),0 2px 6px rgba(0,0,0,.06);
+  opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top left;transition:opacity .18s ease,transform .18s ease}
+[data-theme=dark] .block-menu{background:rgba(30,32,46,.98);border-color:rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.3)}
+.block-menu.on{opacity:1;transform:none}
+.block-menu[hidden]{display:none}
+.block-opt{width:100%;display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--r-md);text-align:left;color:var(--text);transition:background .15s,transform .12s}
+.block-opt:hover,.block-opt:focus-visible{background:color-mix(in srgb,var(--primary) 9%,transparent);outline:none}
+.block-opt:active{transform:scale(.98)}
+.block-opt.sel{background:color-mix(in srgb,var(--primary) 13%,transparent)}
+.block-opt>svg{color:var(--primary);flex:none}
+.bo-ic{width:32px;height:32px;border-radius:var(--r-md);display:grid;place-items:center;font-weight:700;font-size:14px;flex:none;background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
+.bo-t{flex:1;display:flex;flex-direction:column;min-width:0}
+.bo-t b{font-size:14px;font-weight:600}.bo-t small{font-size:12px;color:var(--muted)}
+
+/* --- 2. unlock flow --- */
+.pin-card{display:flex;align-items:center;gap:14px;margin-top:12px;padding:12px 14px;border-radius:var(--r-md);background:color-mix(in srgb,var(--primary) 9%,var(--glass-soft));border:1px solid var(--glass-border)}
+.pin-card>small{font-size:12px;color:var(--muted);line-height:1.4}
+.pin-card>div small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.pin-big{font-size:30px;font-weight:700;letter-spacing:6px;font-variant-numeric:tabular-nums;color:var(--text)}
+.pin-inline{font-variant-numeric:tabular-nums;letter-spacing:1px;color:var(--text)}
+.pin-lbl{display:block;text-align:center;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.err-t{color:var(--red)}
+.scan-open{height:52px;padding:0 28px;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.35);flex:none}
+.scan:not(.live) .scan-line{display:none}
+.scan.wrong .scan-frame i{border-color:#ff6b5e}
+.scan.wrong .scan-line{display:none}
+.scan-err b{font-weight:700}
+.ok-anim circle{stroke:currentColor;stroke-width:3;stroke-dasharray:145;stroke-dashoffset:145;animation:draw .5s ease forwards}
+.ok-anim path{stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .35s .4s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.ok-ic.big{animation:pop .45s cubic-bezier(.2,.9,.3,1.4) both}

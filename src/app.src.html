@@ -11,7 +11,10 @@
 <header>
   <div class="bar">
     <a class="logo" href="#/"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8H16"/><path d="M12 8.2c1.6 2 2.6 3.4 2.6 4.7a2.6 2.6 0 0 1-5.2 0c0-1.3 1-2.7 2.6-4.7z" fill="currentColor" fill-opacity=".18"/></svg><span>WashQ</span></a>
-    <div class="block-wrap" title="Switch hostel block"><select id="blockSel" class="block-sel" aria-label="Hostel block"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option></select></div>
+    <div class="block-wrap" id="blockWrap">
+      <button type="button" id="blockBtn" class="block-sel" aria-haspopup="listbox" aria-expanded="false" aria-controls="blockMenu" title="Switch hostel block"><span id="blockLbl">Block C</span></button>
+      <div class="block-menu" id="blockMenu" role="listbox" aria-label="Hostel block" tabindex="-1" hidden></div>
+    </div>
     <nav>
       <a href="#/" data-r="home"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Machines</span></a>
       <a href="#/admin" data-r="admin"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analytics</span></a>
@@ -21,6 +24,7 @@
     <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
   </div>
 </header>
+<div class="block-scrim" id="blockScrim" hidden></div>
 <div id="banners"></div>
 <main id="app"></main>
 <div id="modal"></div>
@@ -53,7 +57,7 @@ function applyTheme(){
   document.documentElement.dataset.theme=t;$('#themeBtn').innerHTML=t==='dark'?sun:moon;
   document.querySelector('meta[name=theme-color]').content=t==='dark'?'#1e1f21':'#ffffff';
 }
-$('#themeBtn').onclick=()=>{prefs.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';savePrefs();applyTheme()};
+$('#themeBtn').onclick=()=>{prefs.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';savePrefs();applyTheme();if(typeof setMood==='function')setMood()};
 applyTheme();
 
 // ---------- state ----------
@@ -226,7 +230,7 @@ function actionsFor(m){
   if(i.cls==='hold'){
     if(i.owner===ME){
       if(i.b&&i.b.state==='pending')return`<button class="btn primary" data-act="checkin" data-id="${m.id}">Yes, I'm here</button>`;
-      if(i.b&&i.b.sid)return`<button class="btn primary" data-act="scan" data-bid="${i.b.id}">${ic.scan}Scan Machine QR</button>`;
+      if(i.b&&i.b.sid)return`<button class="btn primary" data-act="scan" data-bid="${i.b.id}">${ic.scan}Scan QR to Unlock</button>`;
       return`<button class="btn primary" data-act="resume" data-id="${m.id}">${ic.lock}Enter unlock code</button>`;
     }
     return queueBtn(m);
@@ -292,7 +296,7 @@ function viewHome(soft){
 function myBookingsSection(){
   const mine=S.bookings.filter(b=>b.client===ME).sort((a,b)=>a.start-b.start);
   if(!mine.length)return'';
-  return`<details class="sect" ${prefs.bOpen?'open':''} ontoggle="window.__bt(this.open)"><summary>My bookings (${mine.length})</summary><div class="inner"><div class="blist">${mine.map(b=>`<div class="bitem"><div><b>${esc(M(b.mid).name)}</b> · ${range(b)}<br><small>${durName(b.dur)} · ${b.state==='upcoming'?'Upcoming':b.state==='pending'?'Check in now':'Checked in'}</small></div><div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div></div>`).join('')}</div></div></details>`;
+  return`<details class="sect" ${prefs.bOpen?'open':''} ontoggle="window.__bt(this.open)"><summary>My bookings (${mine.length})</summary><div class="inner"><div class="blist">${mine.map(b=>`<div class="bitem"><div><b>${esc(M(b.mid).name)}</b> · ${range(b)}<br><small>${durName(b.dur)} · ${b.state==='upcoming'?'Upcoming':b.state==='pending'?'Check in now':'Checked in'}${b.pin?` · PIN <b class="pin-inline">${esc(b.pin)}</b>`:''}</small></div><div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR to Unlock</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div></div>`).join('')}</div></div></details>`;
 }
 window.__bt=o=>{prefs.bOpen=o;savePrefs()};
 function patch(list){
@@ -327,7 +331,7 @@ function viewMachine(soft){
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="h2">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
-        ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`:''}</div>`).join('')}</div>`
+        ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR to Unlock</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`:''}</div>`).join('')}</div>`
           :'<div class="sub" style="font-size:14px">No upcoming bookings. Book ahead to skip the queue — you’ll get 10 minutes to check in when your slot starts.</div>'}
       </div>
     </div>`;
@@ -425,10 +429,23 @@ function banners(){
   if(b.dataset.k!==k){b.innerHTML=items.map(x=>`<div class="banner ${x.cls||''}">${x.ico||warn}${x.h}</div>`).join('');b.dataset.k=k}
   else b.querySelectorAll('[data-t]').forEach((s,ix)=>s.textContent=fmt(items[ix].t-now));
 }
+// ----- ambient background: tint follows the share of FREE machines (recomputed on every render) -----
+const AMB={
+  light:{busy:['#fdba74','#fca5a5','#fcd34d'],mixed:['#a5b4fc','#d8b4fe','#93c5fd'],free:['#6ee7b7','#5eead4','#a7f3d0']},
+  dark: {busy:['#7c2d12','#6b1d2a','#713f12'],mixed:['#312e81','#4c1d95','#1e3a8a'],free:['#065f46','#115e59','#134e4a']}
+};
+const hex2=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mixC=(a,b,t)=>'#'+hex2(a).map((v,i)=>Math.round(v+(hex2(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
+let ambKey='';
 function setMood(){
-  const n=S.machines.length||1,free=S.machines.filter(isFree).length,busy=n-free;
-  const mood=S.machines.length&&free/n>=.6?'free':(S.machines.length&&busy/n>=.6?'busy':'mixed');
-  if(document.documentElement.dataset.mood!==mood)document.documentElement.dataset.mood=mood;
+  const n=S.machines.length,free=S.machines.filter(isFree).length,pct=n?free/n:.5;
+  const theme=document.documentElement.dataset.theme==='dark'?'dark':'light',P=AMB[theme];
+  const key=theme+'|'+free+'/'+n;if(key===ambKey)return;ambKey=key;
+  // 0% free → warm amber/red · 50% → neutral blue/purple · 100% free → green/teal
+  const [from,to,t]=pct<.5?[P.busy,P.mixed,pct/.5]:[P.mixed,P.free,(pct-.5)/.5];
+  const c=from.map((x,i)=>mixC(x,to[i],t)),r=document.documentElement.style;
+  r.setProperty('--bg-gradient-start',c[0]);r.setProperty('--bg-gradient-mid',c[1]);r.setProperty('--bg-gradient-end',c[2]);
+  const mood=pct>=.6?'free':(1-pct)>=.6?'busy':'mixed';document.documentElement.dataset.mood=mood;
+  console.log(`[WashQ] ambient: ${free}/${n} machines free = ${Math.round(pct*100)}% → ${mood} (${theme}) start ${c[0]} end ${c[2]}`);
 }
 function render(soft){setMood();({home:viewHome,machine:viewMachine,setup:viewSetup,admin:viewAdmin})[route](soft);banners()}
 
@@ -561,7 +578,7 @@ function bookDialog(id){
     if(!API.ok)return finish();
     const go=async()=>{
       const btn=document.querySelector('#f button.primary');if(btn){btn.disabled=true;btn.textContent='Booking…'}
-      try{const r=await api('POST','/api/bookings',{machine_id:mcode(id),machine_name:m.name,start:startMs,dur});b.sid=r.booking.id;finish()}
+      try{const r=await api('POST','/api/bookings',{machine_id:mcode(id),machine_name:m.name,start:startMs,dur});b.sid=r.booking.id;b.pin=r.pin;finish()}
       catch(e){if(btn){btn.disabled=false;btn.textContent='Book slot'}if(e.status===401)return loginDialog(()=>bookDialog(id));const el=$('#msg');if(el)el.textContent=e.message;else toast(e.message)}
     };
     if(!prefs.token)return loginDialog(()=>{bookDialog(id)},'Sign in to book a slot');
@@ -573,7 +590,7 @@ function bookDialog(id){
 
 function confirmDialog(bid){
   const b=S.bookings.find(x=>x.id===bid);if(!b)return;const m=M(b.mid);
-  if(b.state==='confirmed'){if(b.sid){openScanner(b);return}openOtpForBooking(b);return}
+  if(b.state==='confirmed'){if(b.sid){startUnlock(b);return}openOtpForBooking(b);return}
   openConfirm=bid;
   showModal(`<h2>Are you going to use ${esc(m.name)} now?</h2>
     <p>Your booked slot (${range(b)}) has started. Confirm within ${CONFIRM} minutes or your slot will be released.</p>
@@ -586,7 +603,7 @@ function confirmDialog(bid){
   $('#yes').onclick=()=>{
     if(M(b.mid).state!=='free'){toast(`${m.name} is still finishing a cycle — try again in a moment`);return}
     b.state='confirmed';b.confirmBy=Date.now()+CONFIRM*MIN();
-    if(b.sid){const mm=M(b.mid);mm.hold={client:ME,until:b.confirmBy,dur:b.dur,user:b.name,bookingId:b.id,qr:true};save();lastKey='';render();closeModal();openScanner(b);return}
+    if(b.sid){const mm=M(b.mid);mm.hold={client:ME,until:b.confirmBy,dur:b.dur,user:b.name,bookingId:b.id,qr:true};save();lastKey='';render();closeModal();startUnlock(b);return}
     openOtpForBooking(b);
   };
 }
@@ -607,7 +624,7 @@ document.addEventListener('click',e=>{
     case'green':greenInfo();break;
     case'share-no':prefs.shareMatch=null;savePrefs();banners();break;
     case'share-yes':{const sm=prefs.shareMatch;prefs.shareMatch=null;savePrefs();banners();toast(`Suggestion sent to ${sm?sm.first:'them'} — they'll see your machine number`);break}
-    case'scan':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b)openScanner(b);break}
+    case'scan':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b)startUnlock(b);break}
     case'resume':otpDialog(id);break;
     case'checkin':{const b=activeBooking(m);if(b&&b.client===ME)confirmDialog(b.id);break}
     case'release':if(m.hold){const bid=m.hold.bookingId;m.hold=null;if(bid){const b=S.bookings.find(x=>x.id===bid);if(b)releaseBooking(b,'user')}save();closeModal();lastKey='';render();toast('Reservation released')}break;
