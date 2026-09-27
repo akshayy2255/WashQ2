@@ -685,6 +685,32 @@ main,#banners,h1{position:relative;z-index:1}
   .qr-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
 }
 @media (min-width:1700px){.grid{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}}
+
+/* --- modal fit (all screens): never taller than the viewport; header/buttons always reachable --- */
+/* option cards were inheriting `.field label` (block + UPPERCASE) → restore their row layout */
+.field label.opt{display:flex;align-items:center;gap:12px;margin:0;text-transform:none;letter-spacing:0;font-weight:400;color:var(--text);font-size:inherit}
+.field label.opt>div{flex:1;min-width:0}
+.field label.opt small{text-transform:none}
+.scrim{padding:16px}
+#modal .dialog{display:flex;flex-direction:column;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:hidden}
+#modal .dialog>form,#modal .dialog{min-height:0}
+#modal .dialog>form{display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;margin:-4px;padding:4px;flex:1 1 auto}
+#modal .dialog:not(:has(>form)){overflow-y:auto;overscroll-behavior:contain}
+#modal .dialog .actions{position:sticky;bottom:-4px;z-index:2;margin-top:auto;padding-top:12px;padding-bottom:4px;background:linear-gradient(to bottom,transparent,var(--surface) 14px)}
+[data-theme] #modal .dialog .actions{background:linear-gradient(to bottom,transparent,var(--glass-strong) 14px)}
+
+/* --- desktop: wider, shorter reserve/book dialogs (options in a 2×2 grid) --- */
+@media (min-width:900px){
+  #modal .dialog:has(#durOpts){max-width:680px;padding:24px 28px}
+  #modal .dialog:has(#durOpts) #durOpts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #modal .dialog:has(#durOpts) .field{margin-bottom:14px}
+  #modal .dialog:has(#durOpts) p{margin-bottom:14px}
+  #modal .dialog{max-width:480px}
+}
+@media (min-width:900px) and (max-height:620px){
+  #modal .dialog:has(#durOpts) .field label.opt{padding:9px 12px}
+  #modal .dialog:has(#durOpts) h2{margin-bottom:4px}
+}
 </style>
 </head>
 <body>
