@@ -1,2 +1,22 @@
+# WashQ server runtime data (user accounts, hashed passwords, bookings) — never commit
 data/
+*.json.tmp
+
+# Python
 __pycache__/
+*.pyc
+.venv/
+
+# Environment / secrets
+.env
+.env.*
+
+# Node / tooling (only used for optional minification)
+node_modules/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
