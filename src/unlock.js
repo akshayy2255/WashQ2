@@ -72,8 +72,8 @@ const okSvg='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke=
 // ---------- QR parsing: machine identity only ----------
 function parseMachineQR(text){
   const t=String(text||'').trim();let m;
-  if((m=t.match(/machine_id=(WM-\d{2,4})/i)))return m[1].toUpperCase();
-  if((m=t.match(/^(WM-\d{2,4})$/i)))return m[1].toUpperCase();
+  if((m=t.match(/machine_id=(WM-[A-C]?\d{2,4})/i)))return m[1].toUpperCase();
+  if((m=t.match(/^(WM-[A-C]?\d{2,4})$/i)))return m[1].toUpperCase();
   if((m=t.match(/#\/machine\/(\d+)/)))return mcode(+m[1]);
   return null;
 }
@@ -156,7 +156,7 @@ function manualEntry(){
     <div class="actions"><button type="button" class="btn tonal" id="mc">Back to camera</button><button class="btn primary">Verify</button></div></form>`);
   setTimeout(()=>$('#mi')&&$('#mi').focus(),80);
   $('#mc').onclick=()=>hideSheet();
-  $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const code=/^\d+$/.test(raw)?mcode(+raw):null;
+  $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const mm=raw.match(/^([A-C])?(\d{1,4})$/);const code=mm?(mm[1]?'WM-'+mm[1]+mm[2].padStart(2,'0'):mcode(+mm[2])):null;
     if(!code){toast('Enter a valid machine ID like WM-04');return}SC.busy=true;verifyMachine(SC.b,code)};
 }
 function sheet(html){const s=$('#scS');if(!s)return;s.innerHTML=`<div class="dialog">${html}</div>`;s.classList.add('on')}

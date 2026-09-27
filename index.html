@@ -439,15 +439,186 @@ h1{overflow-wrap:anywhere}
 .cd-chips .chip{cursor:pointer;font-weight:500}
 .cd-chips .chip:hover{background:var(--glass-strong)}
 [hidden]{display:none!important}
+
+/* ===== v6: design tokens + polish pass ===== */
+:root{
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;
+  --r-lg:16px;   /* cards, panels, sections, modals */
+  --r-md:10px;   /* buttons, inputs, options, chips, list rows, banners */
+  --r-sm:8px;    /* badges, tags */
+  --fs-h1:28px;--fs-h2:17px;--fs-h3:16px;--fs-body:14px;--fs-sm:12px;
+  --press:scale(.97);
+}
+/* radius scale */
+.card,.panel,details.sect,.dialog,.qr-card{border-radius:var(--r-lg)!important}
+.btn,.field input,.field select,.field textarea,.opt,.bitem,.banner,.chip,.green-card,.kv,.otp-show,.block-sel,.scan-manual{border-radius:var(--r-md)!important}
+.badge,.tag,.count,.lb-badge{border-radius:var(--r-sm)!important}
+.otp-in input{border-radius:var(--r-md)}
+/* spacing scale */
+.card{padding:var(--s4);gap:var(--s3)}
+.panel{padding:var(--s5)}
+.dialog{padding:var(--s5)}
+details.sect{margin-top:var(--s4)}
+details.sect summary{padding:var(--s4) var(--s5)}
+details.sect .inner{padding:0 var(--s5) var(--s5)}
+.grid{gap:var(--s4)}
+.kpis{gap:var(--s4);margin:var(--s5) 0}
+.toolbar{margin:var(--s5) 0 var(--s4);gap:var(--s3)}
+.field{margin-bottom:var(--s4)}
+.field label{margin-bottom:var(--s2)}
+.blist{gap:var(--s2)}
+.bitem{padding:var(--s3) var(--s4)}
+.banner{padding:var(--s3) var(--s4);gap:var(--s3);margin-top:var(--s4)}
+.dialog p{margin-bottom:var(--s4)}
+/* type hierarchy: h1 > section > card title > body > small */
+h1{font-size:var(--fs-h1);font-weight:650;letter-spacing:-.5px}
+.dialog h2{font-size:19px;font-weight:650;letter-spacing:-.2px;display:flex;align-items:center;gap:var(--s2)}
+.h2,details.sect summary{font-size:var(--fs-h2);font-weight:600;letter-spacing:-.2px}
+.mname{font-size:var(--fs-h3);font-weight:600}
+.sub,.dialog p,.bitem,.opt b{font-size:var(--fs-body)}
+.mmeta,.plabel,.tag,.opt small,.bitem small,.field label,.kpi .k{font-size:var(--fs-sm)}
+.kpi .k{font-size:13px}
+.field textarea{width:100%;padding:var(--s3) 14px;border:1px solid var(--border);background:var(--glass-soft);font:inherit;color:inherit;outline:none;resize:vertical;min-height:84px;transition:border-color .2s;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.field textarea:focus,.field select:focus{border-color:var(--primary)}
+.field select{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+
+/* micro-interactions */
+.btn,.mini,.icon-btn,.chip,.green-card,.block-sel,.opt,.switch .track,details.sect summary,.scan-ib,.lb-row{transition:transform .15s ease,background .2s,opacity .2s,box-shadow .2s,border-color .2s}
+.btn:active,.mini:active,.icon-btn:active,.green-card:active,.block-sel:active,.scan-ib:active{transform:var(--press)}
+.opt:active{transform:scale(.99)}
+.mini:hover,.icon-btn:hover{transform:scale(1.06)}
+.switch:active .track{transform:scale(.94)}
+details.sect summary:hover{background:color-mix(in srgb,var(--glass-strong) 50%,transparent)}
+details.sect summary{border-radius:var(--r-lg);transition:background .2s}
+
+/* header: block switcher + icon nav */
+.logo{margin-right:0}
+.block-wrap{margin-right:auto;margin-left:var(--s2);position:relative}
+.block-sel{appearance:none;-webkit-appearance:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--text);height:36px;padding:0 30px 0 12px;cursor:pointer;
+  background:var(--glass) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border:1px solid var(--glass-border);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:0 1px 2px rgba(0,0,0,.06);outline:none}
+.block-sel:hover{background-color:var(--glass-strong)}
+.block-sel:focus-visible{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 25%,transparent)}
+.block-sel option{background:var(--a4);color:var(--text)}
+nav a{display:inline-flex;align-items:center;gap:6px}
+.nav-ic{display:none}
+
+/* card mini actions */
+.card .actions{align-items:center;gap:var(--s1)}
+.card .actions .btn{margin-right:var(--s1)}
+.mini{width:34px;height:34px}
+
+/* tags: reported + health */
+.tag.reported{border-style:solid;color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent);background:color-mix(in srgb,var(--red-bg) 70%,transparent)}
+.tag.health{border-style:solid;border-color:var(--glass-border);background:var(--glass-soft)}
+.h-good{color:var(--green)}.h-fair{color:var(--yellow)}.h-bad{color:var(--red)}
+:root:not([data-theme=dark]) .h-good{color:#0f6b2c}:root:not([data-theme=dark]) .h-fair{color:#8a4b00}:root:not([data-theme=dark]) .h-bad{color:#b3261e}
+.tag.ok{border-style:solid;color:var(--green)}
+
+/* green impact card — fits the stats row, wraps to full width on phones */
+.green-card{display:flex;align-items:center;gap:var(--s3);text-align:left;padding:10px 14px;background:color-mix(in srgb,var(--green-bg) 55%,var(--glass));border:1px solid var(--glass-border);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--glass-shadow);color:var(--text);cursor:pointer;max-width:100%;min-width:0}
+.green-card:hover{background:color-mix(in srgb,var(--green-bg) 75%,var(--glass-strong))}
+.green-card>svg:first-child{color:var(--green);flex:none;width:22px;height:22px}
+:root:not([data-theme=dark]) .green-card>svg:first-child{color:#0f6b2c}
+.green-card>svg:last-child{color:var(--muted);flex:none}
+.green-card span{display:flex;flex-direction:column;min-width:0}
+.green-card b{font-size:13.5px;font-weight:600}
+.green-card small{font-size:11.5px;color:var(--muted)}
+.toolbar{display:grid;grid-template-columns:1fr auto;align-items:center}
+.toolbar .stats{grid-column:1/-1}
+.toolbar .green-card{grid-column:1}
+.toolbar .switch{grid-column:2;justify-self:end}
+
+/* share toggle + banner */
+.share-sw{align-items:flex-start;margin:var(--s1) 0 var(--s3);color:var(--text);font-size:13.5px;line-height:1.4}
+.share-sw .track{flex:none;margin-top:1px}
+.share-sw small{color:var(--muted)}
+.banner.share{background:color-mix(in srgb,var(--primary) 12%,var(--glass))}
+.banner.share>svg{color:var(--primary)}
+.banner-acts{display:flex;gap:var(--s2);flex:none}
+.banner .btn.primary{height:34px;font-size:13px}
+
+/* checklist */
+.checks .opt{padding:var(--s3) 14px}
+
+/* sections with icons */
+.sum-t{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.sum-t svg{color:var(--primary);flex:none}
+.count{font-size:12px;font-weight:600;padding:2px 8px;background:var(--glass-soft);color:var(--muted);border:1px solid var(--glass-border)}
+.count.warn{color:var(--red);background:color-mix(in srgb,var(--red-bg) 70%,transparent)}
+.bitem.muted{opacity:.7}
+.bitem small.wrap{white-space:normal}
+.btn.sm{height:32px;font-size:12.5px;padding:0 12px;flex:none}
+
+/* health list */
+.hlist{display:flex;flex-direction:column}
+.hrow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(60px,1fr) 44px auto;align-items:center;gap:var(--s3);padding:var(--s3) 0;border-bottom:1px solid var(--border)}
+.hrow:last-child{border-bottom:none}
+.hname{min-width:0}.hname b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hname small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar{height:6px;border-radius:999px;background:rgba(120,125,160,.18);overflow:hidden}
+.hbar i{display:block;height:100%;border-radius:inherit;background:currentColor;transition:width .6s ease}
+.hval{font-weight:650;font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* leaderboard */
+.lb-list{display:flex;flex-direction:column;gap:var(--s2)}
+.lb-row{display:flex;align-items:center;gap:var(--s3);padding:10px var(--s3);border-radius:var(--r-md);background:var(--glass-soft);border:1px solid var(--glass-border)}
+.lb-row:hover{background:var(--glass-strong)}
+.lb-row .grow{flex:1;min-width:0}
+.lb-row b{font-size:14px;font-weight:600}.lb-row small{color:var(--muted);font-size:12px}
+.lb-d{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none;background:var(--glass-strong);color:var(--muted);border:1px solid var(--glass-border)}
+.rank.r1{background:#fde68a;color:#7a4d00}.rank.r2{background:#e5e7eb;color:#374151}.rank.r3{background:#fed7aa;color:#7c2d12}
+.lb-badge{font-size:12px;font-weight:600;padding:4px 8px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--text);white-space:nowrap;flex:none}
+.lb-w{font-size:12px;color:var(--muted);white-space:nowrap;flex:none;min-width:62px;text-align:right}
+
+/* mobile */
+@media (max-width:720px){
+  .panel{padding:20px}.dialog{padding:20px}
+  .hrow{grid-template-columns:minmax(0,1fr) 44px auto;row-gap:6px}
+  .hbar{grid-column:1/-1;grid-row:2}
+  .lb-row{flex-wrap:wrap}
+  .lb-badge{order:3;margin-left:40px}
+  .lb-w{margin-left:auto}
+}
+@media (max-width:480px){
+  .nav-ic{display:block}
+  nav a span{display:none}
+  nav a{padding:8px}
+  .bar{gap:0}
+  .icon-btn{width:38px;height:38px}
+  .block-sel{height:34px;font-size:13px;padding:0 26px 0 10px;background-position:right 8px center}
+  .toolbar{grid-template-columns:1fr}
+  .toolbar .green-card,.toolbar .switch{grid-column:1;justify-self:stretch}
+  .toolbar .switch{justify-self:start}
+  .banner{flex-wrap:wrap}
+  .banner-acts{width:100%;justify-content:flex-end}
+  details.sect summary{padding:14px var(--s4)}
+  details.sect .inner{padding:0 var(--s4) var(--s4)}
+}
+/* compact labels on narrow cards (4-column desktop grid) */
+@container (max-width:300px){.card .lg-only{display:none}}
+/* setup list on phones: actions under the name, no mid-word breaks */
+.mrow small{word-break:normal!important;overflow-wrap:normal!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+@media (max-width:480px){
+  .mrow{flex-wrap:wrap;row-gap:6px}
+  .mrow .grow{flex:1 1 calc(100% - 90px)}
+  .mrow .acts{flex-direction:row!important;width:100%;justify-content:flex-end;gap:18px!important;padding-left:82px}
+}
+@container (max-width:300px){.card .btn{padding:0 10px;gap:5px;font-size:13.5px}.card .mini{width:30px;height:30px}.card .actions{gap:2px}}
+@container (max-width:300px){.card .btn{padding:0 8px;font-size:13px}}
+@media (max-width:480px){.sect .bitem{flex-wrap:wrap;row-gap:8px}.sect .bitem>div:first-child{flex:1 1 100%}.sect .bitem small{white-space:normal}.sect .bitem>.btn,.sect .bitem>.tag{margin-left:auto}}
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
     <a class="logo" href="#/"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8H16"/><path d="M12 8.2c1.6 2 2.6 3.4 2.6 4.7a2.6 2.6 0 0 1-5.2 0c0-1.3 1-2.7 2.6-4.7z" fill="currentColor" fill-opacity=".18"/></svg><span>WashQ</span></a>
+    <div class="block-wrap" title="Switch hostel block"><select id="blockSel" class="block-sel" aria-label="Hostel block"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option></select></div>
     <nav>
-      <a href="#/" data-r="home">Machines</a>
-      <a href="#/admin" data-r="admin">Analytics</a>
+      <a href="#/" data-r="home"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Machines</span></a>
+      <a href="#/admin" data-r="admin"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analytics</span></a>
     </nav>
     <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
     <button class="icon-btn" id="acctBtn" aria-label="Account" title="Account" style="display:none"></button>
@@ -2761,7 +2932,7 @@ var qrcode = function() {
 <script>
 (() => {
 'use strict';
-const KEY='washq.v3', PREF='washq.prefs', GRACE=10, CONFIRM=10, HOLD=5;
+const KEY='washq.v4', PREF='washq.prefs', GRACE=10, CONFIRM=10, HOLD=5;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const DUR=[{v:30,t:'Quick wash',d:'Lightly soiled, small loads'},{v:40,t:'Standard wash',d:'Everyday clothes, regular load'},{v:60,t:'Heavy load',d:'Bedsheets, towels, jeans, full drum'}];
@@ -2791,36 +2962,48 @@ function blank(id,name){return{id,name:name||('Machine '+id),state:'free',start:
 function reset(m){Object.assign(m,{state:'free',start:0,end:0,dur:0,user:'',owner:'',graceEnd:0,hold:null})}
 // Demo starting state — realistic mock activity. Everything stays fully interactive.
 const MOCK_USERS=['Aditya · C-204','Priya · C-112','Rohan · B-305','Sneha · A-118','Karan · C-220','Ishaan · B-401','Ananya · A-207','Vikram · C-315','Meera · B-108','Arjun · A-322'];
-function seed(){
-  const now=Date.now(),MS=60000,m=Array.from({length:15},(_,i)=>blank(i+1)),log=[];
-  const U=i=>MOCK_USERS[i%MOCK_USERS.length];
+function seed(blk='C'){
+  const B=BLOCKS[blk]||BLOCKS.C,N=B.n,o=B.o,now=Date.now(),MS=60000,m=Array.from({length:N},(_,i)=>blank(i+1)),log=[];
+  const U=i=>MOCK_USERS[(i+o)%MOCK_USERS.length];
+  const Mi=id=>blk==='C'?id:((id-1+o)%(N-1))+2;   // shuffle which machines are busy per block (never Machine 1)
+  const mk=id=>m[Mi(id)-1];
   // [machine, duration, minutes elapsed, user]  — Machine 1 left free for the live sensor
   [[3,60,38,U(0)],[5,40,9,U(1)],[7,45,33,U(4)],[10,30,4,U(3)],[13,90,61,U(5)]].forEach(([id,d,el,u])=>{
-    Object.assign(m[id-1],{state:'busy',dur:d,start:now-el*MS,end:now+(d-el)*MS,user:u,owner:'demo'});log.push({t:now-el*MS,d,m:id});
+    Object.assign(mk(id),{state:'busy',dur:d,start:now-el*MS,end:now+(d-el)*MS,user:u,owner:'demo'});log.push({t:now-el*MS,d,m:Mi(id)});
   });
   // cycle complete, waiting for pickup (grace period running)
   [[9,40,3,U(2)],[14,60,7,U(8)]].forEach(([id,d,sinceDone,u])=>{
-    const end=now-sinceDone*MS;Object.assign(m[id-1],{state:'done',dur:d,start:end-d*MS,end,graceEnd:end+GRACE*MS,user:u,owner:'demo'});log.push({t:end-d*MS,d,m:id});
+    const end=now-sinceDone*MS;Object.assign(mk(id),{state:'done',dur:d,start:end-d*MS,end,graceEnd:end+GRACE*MS,user:u,owner:'demo'});log.push({t:end-d*MS,d,m:Mi(id)});
   });
-  m[2].queue=[{name:U(6),client:'demo'},{name:U(9),client:'demo'}];   // Machine 3: 2 waiting
-  m[4].queue=[{name:U(7),client:'demo'}];                              // Machine 5: 1 waiting
-  m[12].queue=[{name:U(3),client:'demo'},{name:U(0),client:'demo'}];  // Machine 13: 2 waiting
+  mk(3).queue=[{name:U(6),client:'demo'},{name:U(9),client:'demo'}];   // Machine 3: 2 waiting
+  mk(5).queue=[{name:U(7),client:'demo'}];                              // Machine 5: 1 waiting
+  mk(13).queue=[{name:U(3),client:'demo'},{name:U(0),client:'demo'}];  // Machine 13: 2 waiting
   // usage pattern: quiet mornings, lunch bump 12–2 PM, big evening peak 6–10 PM, ~zero late night
   const w=[.3,.1,0,0,0,0,1,1.6,1.8,1.2,1,1.4,3.6,4.2,3.2,1.6,1.8,2.8,6,8.4,9,7.6,4.6,1.4];
   const durs=[30,40,40,60,45,30,40,60,90,40];
   for(let d=0;d<7;d++){const weekend=[0,6].includes(new Date(now-d*864e5).getDay());
     for(let h=0;h<24;h++){const n=Math.max(0,Math.round(w[h]*(weekend?1.25:1)*(0.75+Math.random()*0.5)));
       for(let k=0;k<n;k++){const day=new Date(now);day.setDate(day.getDate()-d);day.setHours(h,Math.floor(Math.random()*60),0,0);
-        if(day.getTime()<now-90*MS)log.push({t:day.getTime(),d:durs[(h+k+d)%durs.length],m:1+Math.floor(Math.random()*15)})}}}
+        if(day.getTime()<now-90*MS)log.push({t:day.getTime(),d:durs[(h+k+d)%durs.length],m:1+Math.floor(Math.random()*N)})}}}
   const slot=mins=>{const t=new Date(now+mins*MS);t.setMinutes(Math.ceil(t.getMinutes()/15)*15,0,0);return t.getTime()};
-  const bookings=[{id:'b1',mid:6,start:slot(75),dur:40,name:U(7),client:'demo',state:'upcoming'},
-                  {id:'b2',mid:11,start:slot(140),dur:60,name:U(8),client:'demo',state:'upcoming'}];
-  return{machines:m,log,bookings,nextId:16};
+  const bookings=[{id:'b1',mid:Mi(6),start:slot(75),dur:40,name:U(7),client:'demo',state:'upcoming'},
+                  {id:'b2',mid:Mi(11),start:slot(140),dur:60,name:U(8),client:'demo',state:'upcoming'}];
+  // open maintenance reports (lower those machines' health score)
+  const reports=[{id:'r1',mid:Mi(7),issue:'Making unusual noise',details:'Loud rattling during spin',t:now-26*3600e3,by:U(4),cleared:false},
+                 {id:'r2',mid:Mi(12),issue:'Not draining',details:'Water left in drum after cycle',t:now-5*3600e3,by:U(2),cleared:false},
+                 {id:'r3',mid:Mi(4),issue:'Door won\'t lock',details:'',t:now-3*864e5,by:U(9),cleared:true,clearedAt:now-2*864e5}];
+  const sharePool=[{client:'demo',name:U(1),t:now-4*MS}];   // someone open to sharing a load right now
+  return{machines:m,log,bookings,reports,sharePool,nextId:N+1};
 }
-let S=JSON.parse(localStorage.getItem(KEY)||'null')||seed();
-S.bookings=S.bookings||[];
-const save=()=>localStorage.setItem(KEY,JSON.stringify(S));save();
-window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){S=JSON.parse(e.newValue);lastKey='';render()}});
+// ----- hostel blocks: each block has its own machine set, persisted separately -----
+const BLOCKS={A:{n:12,o:3},B:{n:10,o:6},C:{n:15,o:0}};
+let BLOCK=prefs.block in BLOCKS?prefs.block:'C';
+{const qm=(new URLSearchParams(location.search).get('machine_id')||'').toUpperCase().match(/^WM-([A-C])\d/);if(qm)BLOCK=qm[1];else if(/^WM-\d/.test((new URLSearchParams(location.search).get('machine_id')||'').toUpperCase()))BLOCK='C'}
+const skey=b=>b==='C'?KEY:KEY+'.'+b;
+function loadBlock(b){const s=JSON.parse(localStorage.getItem(skey(b))||'null')||seed(b);s.bookings=s.bookings||[];s.reports=s.reports||[];s.sharePool=s.sharePool||[];return s}
+let S=loadBlock(BLOCK);
+const save=()=>localStorage.setItem(skey(BLOCK),JSON.stringify(S));save();
+window.addEventListener('storage',e=>{if(e.key===skey(BLOCK)&&e.newValue){S=loadBlock(BLOCK);lastKey='';render()}});
 const M=id=>S.machines.find(x=>x.id===id);
 
 // ---------- sound / notifications ----------
@@ -2897,7 +3080,7 @@ function tick(){
 // Polls sensor/machine1.json → {"state":"busy","remaining_min":23,"total_min":40} or {"state":"free"}.
 // If the file/endpoint isn't reachable, Machine 1 silently falls back to simulation.
 async function pollSensor(){
-  const m=M(1);if(!m)return;
+  const m=M(1);if(!m||BLOCK!=='C')return;  // real sensor is installed on Block C · Machine 1
   try{
     const r=await fetch('sensor/machine1.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
     const d=await r.json(),now=Date.now();
@@ -2937,7 +3120,7 @@ const ic={
   people:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg>'
 };
 function queueBtn(m){return inQueue(m)?`<button class="btn tonal" data-act="unqueue" data-id="${m.id}">✓ #${qpos(m)} in line · Leave</button>`
-  :`<button class="btn outline" data-act="queue" data-id="${m.id}">${ic.bell}Notify me when free</button>`}
+  :`<button class="btn outline" data-act="queue" data-id="${m.id}">${ic.bell}Notify me<span class="lg-only"> when free</span></button>`}
 function actionsFor(m){
   const i=info(m);
   if(i.cls==='free')return`<button class="btn primary" data-act="reserve" data-id="${m.id}">${ic.lock}Reserve &amp; Start</button>`;
@@ -2957,7 +3140,9 @@ function tagsFor(m){
   if(m.sensor)t.push('<span class="tag sensor"><span class="dot"></span>Live sensor</span>');
   const nb=nextBooking(m);if(nb)t.push(`<span class="tag">${ic.cal.replace(/17/g,'12')}Booked: ${range(nb)}${nb.client===ME?' · you':''}</span>`);
   if(m.queue.length)t.push(`<span class="tag">${ic.people}${m.queue.length} ${m.queue.length===1?'person':'people'} waiting</span>`);
-  return t.length?`<div class="tags">${t.join('')}</div>`:'';
+  if(openReports(m).length)t.push(`<span class="tag reported" title="${esc(openReports(m).map(r=>r.issue).join(', '))}">${ic.alert}Reported</span>`);
+  const h=health(m);t.push(`<span class="tag health h-${h.cls}" title="Predictive maintenance health score">${ic.pulse}Health ${h.score}% · ${h.label}</span>`);
+  return`<div class="tags">${t.join('')}</div>`;
 }
 function metaFor(m,i){
   if(i.cls==='free')return'Ready to use';
@@ -2977,10 +3162,10 @@ function card(m){
       <span class="badge ${i.cls}"><span class="dot"></span><span data-badge>${i.label}</span></span></div>
     <div><div class="progress ${i.cls}"><i style="width:${i.pct}%"></i></div><div class="plabel">${plabel(m,i)}</div></div>
     ${tagsFor(m)}
-    <div class="actions">${actionsFor(m)}<button class="mini" title="Book a time slot" data-act="book" data-id="${m.id}" style="align-self:center">${ic.cal}</button></div>
+    <div class="actions">${actionsFor(m)}<button class="mini" title="Book a time slot" aria-label="Book a time slot" data-act="book" data-id="${m.id}">${ic.cal}</button><button class="mini" title="Report an issue" aria-label="Report an issue" data-act="report" data-id="${m.id}">${ic.wrench}</button></div>
   </div>`;
 }
-const structKey=m=>{const i=info(m),nb=nextBooking(m);return[m.id,m.name,m.state,i.cls,i.label,i.owner,m.owner===ME,inQueue(m),qpos(m),m.queue.length,m.user,m.sensor,nb&&nb.id].join('|')};
+const structKey=m=>{const i=info(m),nb=nextBooking(m);return[openReports(m).length,health(m).score,m.id,m.name,m.state,i.cls,i.label,i.owner,m.owner===ME,inQueue(m),qpos(m),m.queue.length,m.user,m.sensor,nb&&nb.id].join('|')};
 
 // ---------- views ----------
 function viewHome(soft){
@@ -2997,10 +3182,12 @@ function viewHome(soft){
         <span class="chip"><span class="dot" style="background:var(--yellow-s)"></span>${c.done} ready to collect</span>
         ${c.hold?`<span class="chip"><span class="dot" style="background:var(--primary)"></span>${c.hold} reserved</span>`:''}
       </div>
+      ${greenCard()}
       <label class="switch"><input type="checkbox" id="onlyFree" ${prefs.onlyFree?'checked':''}><span class="track"></span>Show only free machines</label>
     </div>
     ${list.length?`<div class="grid">${list.map(card).join('')}</div>`:`<div class="empty">${S.machines.length?'No free machines right now.<br>Tap “Notify me when free” on a busy machine to join the queue.':'No machines yet. Add one from <a href="#/setup">Machine setup</a>.'}</div>`}
-    ${myBookingsSection()}`;
+    ${myBookingsSection()}
+    ${leaderboard()}`;
   $('#onlyFree').onchange=e=>{prefs.onlyFree=e.target.checked;savePrefs();lastKey='';render()};
 }
 function myBookingsSection(){
@@ -3040,14 +3227,14 @@ function viewMachine(soft){
         <div class="actions">${actionsFor(m)}</div>
       </div>
       <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:600">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="h2">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
         ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`:''}</div>`).join('')}</div>`
           :'<div class="sub" style="font-size:14px">No upcoming bookings. Book ahead to skip the queue — you’ll get 10 minutes to check in when your slot starts.</div>'}
       </div>
     </div>`;
 }
 
-const mcode=id=>'WM-'+String(id).padStart(2,'0');
+const mcode=id=>'WM-'+(BLOCK==='C'?'':BLOCK)+String(id).padStart(2,'0');
 // QR payload identifies the physical machine only (machine_id=WM-04) — no credentials
 function machineURL(id){return location.origin+location.pathname.replace(/\/machine\/\d+\/?$/,'/')+'?machine_id='+mcode(id)+'#/machine/'+id}
 function qrObj(t){const q=qrcode(0,'M');q.addData(t);q.make();return q}
@@ -3063,11 +3250,11 @@ function downloadQR(m){
 }
 let justMade=null;
 function viewSetup(soft){
-  const key='setup'+justMade+S.machines.map(m=>m.id+m.name).join();
+  const key='setup'+BLOCK+justMade+S.machines.map(m=>m.id+m.name+health(m).score).join()+S.reports.map(r=>r.id+r.cleared).join();
   if(soft&&key===lastKey)return;lastKey=key;
   const nm=M(justMade);
   $('#app').innerHTML=`
-    <h1>Machine setup</h1><div class="sub">Admin · add machines and generate their QR codes</div>
+    <h1>Machine setup</h1><div class="sub">Admin · Block ${BLOCK} · machines, QR codes &amp; maintenance</div>
     <div class="panel" style="margin-top:24px">
       <form class="setup-form" id="addF">
         <div class="field"><label>Machine name / number</label><input id="mn" maxlength="30" placeholder="e.g. Machine ${S.nextId} or Block B – Washer 2" required></div>
@@ -3077,7 +3264,9 @@ function viewSetup(soft){
     </div>
     <details class="sect" open><summary>All machines (${S.machines.length})</summary><div class="inner">
       ${S.machines.length?`<div class="mlist">${S.machines.map(m=>`<div class="mrow"><div class="qr-box">${qrSVG(machineURL(m.id))}</div><div class="grow"><div>${esc(m.name)}</div><small>${mcode(m.id)} · /machine/${m.id}</small></div><div class="acts"><button class="link" data-act="dl" data-id="${m.id}">Download</button><button class="link danger" data-act="del" data-id="${m.id}">Delete machine</button></div></div>`).join('')}</div>`:'<div class="sub">No machines yet.</div>'}
-    </div></details>`;
+    </div></details>
+    ${healthSection()}
+    ${maintenanceSection()}`;
   $('#addF').onsubmit=e=>{e.preventDefault();const name=$('#mn').value.trim();if(!name)return;
     if(S.machines.some(m=>m.name.toLowerCase()===name.toLowerCase())){toast('A machine with that name already exists');return}
     const id=S.nextId++;S.machines.push(blank(id,name));save();justMade=id;lastKey='';render();toast(`${name} added`)};
@@ -3104,15 +3293,15 @@ function viewAdmin(soft){
       <div class="panel kpi"><div class="k">In use right now</div><div class="v">${busyNow}<span style="font-size:18px;color:var(--muted)"> / ${S.machines.length}</span></div></div>
     </div>
     <div class="panel">
-      <div style="font-weight:600">Usage by hour of day</div><div class="sub" style="font-size:13px">Wash starts per hour, summed over the last 7 days</div>
+      <div class="h2">Usage by hour of day</div><div class="sub" style="font-size:13px">Wash starts per hour, summed over the last 7 days</div>
       <div class="chart">${hours.map((v,h)=>`<div class="col"><span class="tip">${v}</span><div class="b ${h===peak?'peak':''}" style="height:0" data-h="${v/max*100}"></div></div>`).join('')}</div>
       <div class="xl">${hours.map((_,h)=>`<span>${h%3===0?hl(h):''}</span>`).join('')}</div>
       <div class="legend"><span><span class="dot" style="background:var(--red)"></span>Peak hour (${hl(peak)})</span><span><span class="dot" style="background:var(--primary)"></span>Other hours</span></div>
     </div>
     <div class="kpis">
-      <div class="panel"><div style="font-weight:600;margin-bottom:6px">Bottleneck insight</div><div class="sub" style="font-size:14px">Busiest hours: <b style="color:var(--text)">${top}</b>. Quietest daytime hours: <b style="color:var(--text)">${quiet}</b>. Encourage students to book slots in quieter hours before adding machines.</div></div>
+      <div class="panel"><div class="h2" style="margin-bottom:8px">Bottleneck insight</div><div class="sub" style="font-size:14px">Busiest hours: <b style="color:var(--text)">${top}</b>. Quietest daytime hours: <b style="color:var(--text)">${quiet}</b>. Encourage students to book slots in quieter hours before adding machines.</div></div>
       <div class="panel settings">
-        <div style="font-weight:600">Demo controls</div>
+        <div class="h2">Demo controls</div>
         <label class="switch"><input type="checkbox" id="demo" ${prefs.demo?'checked':''}><span class="track"></span>Fast mode (1 min = 1 sec) for testing</label>
         <div class="row"><button class="btn tonal" id="testN">Test notification</button><button class="btn tonal" id="reset">Reset demo data</button></div>
       </div>
@@ -3130,9 +3319,11 @@ function banners(){
   const now=Date.now(),items=[];
   S.machines.filter(m=>m.state==='done'&&m.owner===ME).forEach(m=>items.push({k:'c'+m.id,h:`<div style="flex:1"><b>Please collect your laundry</b> from ${esc(m.name)} · auto-release in <span data-t>${fmt(m.graceEnd-now)}</span></div><button class="btn warn" data-act="collect" data-id="${m.id}">Collected</button>`,t:m.graceEnd}));
   S.bookings.filter(b=>b.client===ME&&b.state==='pending').forEach(b=>items.push({k:'b'+b.id,h:`<div style="flex:1"><b>Your slot on ${esc(M(b.mid).name)} has started.</b> Check in within <span data-t>${fmt(b.confirmBy-now)}</span></div><button class="btn warn" data-act="checkin" data-id="${b.mid}">I'm here</button>`,t:b.confirmBy}));
+  const sm=prefs.shareMatch;
+  if(sm&&sm.until>now&&sm.block===BLOCK)items.push({k:'s'+sm.t,cls:'share',ico:ic.users,h:`<div style="flex:1"><b>${esc(sm.first)} (${esc(sm.room)})</b> is also doing laundry now — want to split a machine?</div><div class="banner-acts"><button class="btn tonal" data-act="share-no">Dismiss</button><button class="btn primary" data-act="share-yes">Suggest splitting</button></div>`,t:sm.until});
   const warn='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
   const b=$('#banners'),k=items.map(x=>x.k).join();
-  if(b.dataset.k!==k){b.innerHTML=items.map(x=>`<div class="banner">${warn}${x.h}</div>`).join('');b.dataset.k=k}
+  if(b.dataset.k!==k){b.innerHTML=items.map(x=>`<div class="banner ${x.cls||''}">${x.ico||warn}${x.h}</div>`).join('');b.dataset.k=k}
   else b.querySelectorAll('[data-t]').forEach((s,ix)=>s.textContent=fmt(items[ix].t-now));
 }
 function setMood(){
@@ -3195,13 +3386,17 @@ function reserveDialog(id){
   showModal(`<form id="f"><h2>Reserve ${esc(m.name)}</h2><p>Pick a cycle. You’ll get a one-time code to confirm you’re at the machine.</p>
     ${durField(d.html)}
     ${nameFields()}
+    <label class="switch share-sw"><input type="checkbox" id="shareOk" ${prefs.share?'checked':''}><span class="track"></span><span>Open to sharing this load with someone else doing laundry now <small>(optional)</small></span></label>
     <div class="msg err" id="msg"></div>
     <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary">Reserve &amp; get code</button></div></form>`);
   $('[data-close]').onclick=closeModal;wireDur();
   $('#f').onsubmit=e=>{e.preventDefault();askPermission();readName();
     if(!isFree(m)){closeModal();toast('Someone just reserved this machine');return}
     const dur=readDur(limitFor(m));if(dur==null)return;
-    m.hold={client:ME,until:Date.now()+HOLD*MIN(),dur,user:who(),code:newCode(),tries:0};save();lastKey='';render();otpDialog(id)};
+    const share=$('#shareOk').checked;prefs.share=share;savePrefs();
+    m.hold={client:ME,until:Date.now()+HOLD*MIN(),dur,user:who(),code:newCode(),tries:0,share};save();lastKey='';render();
+    if(share)findShareMatch(m);
+    checklistDialog(m,()=>otpDialog(id))};
 }
 const newCode=()=>String(Math.floor(1000+Math.random()*9000));
 function otpDialog(id){
@@ -3308,6 +3503,11 @@ document.addEventListener('click',e=>{
   const id=+el.dataset.id,m=M(id);
   switch(el.dataset.act){
     case'reserve':reserveDialog(id);break;
+    case'report':reportDialog(id);break;
+    case'resolve':{const r=S.reports.find(x=>x.id===el.dataset.rid);if(r){r.cleared=true;r.clearedAt=Date.now();save();lastKey='';render();toast(`Issue on ${M(r.mid)?M(r.mid).name:'machine'} marked as resolved`)}break}
+    case'green':greenInfo();break;
+    case'share-no':prefs.shareMatch=null;savePrefs();banners();break;
+    case'share-yes':{const sm=prefs.shareMatch;prefs.shareMatch=null;savePrefs();banners();toast(`Suggestion sent to ${sm?sm.first:'them'} — they'll see your machine number`);break}
     case'scan':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b)openScanner(b);break}
     case'resume':otpDialog(id);break;
     case'checkin':{const b=activeBooking(m);if(b&&b.client===ME)confirmDialog(b.id);break}
@@ -3324,6 +3524,142 @@ document.addEventListener('click',e=>{
     case'del':if(confirm(`Delete ${m.name}? Its QR code will stop working and any bookings are cancelled.`)){S.machines=S.machines.filter(x=>x.id!==id);S.bookings=S.bookings.filter(b=>b.mid!==id);if(justMade===id)justMade=null;save();lastKey='';render();toast(`${m.name} deleted`)}break;
   }
 });
+
+// ================= v6 features =================
+// Icons all use the same style: 24px viewBox, 2px stroke, round caps, no fill.
+const svgI=(d,sz=14)=>`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+Object.assign(ic,{
+  wrench:svgI('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>',17),
+  alert:svgI('<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',12),
+  pulse:svgI('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',12),
+  users:svgI('<circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/>',20),
+  leaf:svgI('<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5.1-6"/>',20),
+  trophy:svgI('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1 1.2 1.1.6 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',18),
+  check:svgI('<path d="M20 6 9 17l-5-5"/>',14),
+  info:svgI('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',14)
+});
+
+// ---------- block switcher ----------
+function initBlockSel(){
+  const sel=$('#blockSel');sel.value=BLOCK;
+  sel.onchange=()=>{
+    const b=sel.value;if(b===BLOCK)return;
+    save();BLOCK=b;prefs.block=b;savePrefs();S=loadBlock(b);save();
+    closeModal();if(typeof closeScanner==='function')closeScanner();
+    if(route==='machine'&&!M(param))location.hash='#/';
+    $('#banners').dataset.k='x';lastKey='';render();pollSensor();
+    toast(`Showing Block ${b} · ${S.machines.length} machines`);
+  };
+}
+
+// ---------- report issue / maintenance ----------
+const ISSUES=['Not draining','Won’t start','Making unusual noise','Door won’t lock','Other'];
+const openReports=m=>(S.reports||[]).filter(r=>r.mid===m.id&&!r.cleared);
+function reportDialog(id){
+  const m=M(id);
+  showModal(`<form id="rf"><h2>Report an issue</h2><p>${esc(m.name)} · ${mcode(m.id)} — the warden will see this in the maintenance log.</p>
+    <div class="field"><label>What’s wrong?</label><select id="ri">${ISSUES.map(i=>`<option>${i}</option>`).join('')}</select></div>
+    <div class="field"><label>Details (optional)</label><textarea id="rd" rows="3" maxlength="200" placeholder="e.g. Water left in the drum after the cycle"></textarea></div>
+    <div class="msg err" id="msg"></div>
+    <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary">Submit report</button></div></form>`);
+  $('[data-close]').onclick=closeModal;
+  $('#rf').onsubmit=e=>{e.preventDefault();
+    const issue=$('#ri').value,details=$('#rd').value.trim();
+    if(issue==='Other'&&!details){$('#msg').textContent='Please describe the issue.';$('#rd').focus();return}
+    S.reports.push({id:'r'+Date.now().toString(36),mid:id,issue,details,t:Date.now(),by:who()||'Anonymous student',cleared:false});
+    save();closeModal();lastKey='';render();toast(`Thanks — ${m.name} has been reported`)};
+}
+function maintenanceSection(){
+  const rs=(S.reports||[]).slice().sort((a,b)=>(a.cleared-b.cleared)||(b.t-a.t));
+  const open=rs.filter(r=>!r.cleared).length;
+  const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?`${Math.max(1,m)} min ago`:m<1440?`${Math.round(m/60)} h ago`:`${Math.round(m/1440)} d ago`};
+  return`<details class="sect" open><summary><span class="sum-t">${ic.wrench}Maintenance log <span class="count ${open?'warn':''}">${open} open</span></span></summary><div class="inner">
+    ${rs.length?`<div class="blist">${rs.map(r=>{const m=M(r.mid);return`<div class="bitem ${r.cleared?'muted':''}"><div><b>${esc(m?m.name:'Deleted machine')}</b> · ${esc(r.issue)}${r.details?`<small class="wrap">“${esc(r.details)}”</small>`:''}<small>${esc(r.by)} · ${ago(r.t)}${r.cleared?' · resolved':''}</small></div>
+      ${r.cleared?`<span class="tag ok">${ic.check}Resolved</span>`:`<button class="btn tonal sm" data-act="resolve" data-rid="${r.id}">Mark resolved</button>`}</div>`}).join('')}</div>`
+      :'<div class="sub">No issues reported. 🎉</div>'}
+  </div></details>`;
+}
+
+// ---------- predictive maintenance: health score ----------
+// Mock model: 100 − wear from heavy use this week − open reports − recently fixed issues − per-machine age factor.
+// A live sensor reporting normal readings (Machine 1) adds confidence and keeps the score high.
+function health(m){
+  const wk=Date.now()-7*864e5;
+  const cycles=S.log.filter(l=>l.m===m.id&&l.t>=wk).length;
+  const open=openReports(m).length,fixed=(S.reports||[]).filter(r=>r.mid===m.id&&r.cleared&&(r.clearedAt||r.t)>=wk).length;
+  const age=((m.id*37+BLOCK.charCodeAt(0)*11)%9);
+  let score=100-Math.max(0,cycles-18)*1.4-open*22-fixed*6-age;
+  if(m.sensor)score=Math.max(score+10,88);
+  score=Math.round(Math.max(12,Math.min(100,score)));
+  const cls=score>=80?'good':score>=60?'fair':'bad';
+  return{score,cls,label:cls==='good'?'Good':cls==='fair'?'Fair':'Needs check',cycles,open,fixed};
+}
+function healthSection(){
+  const list=S.machines.map(m=>({m,h:health(m)})).sort((a,b)=>a.h.score-b.h.score);
+  return`<details class="sect" open><summary><span class="sum-t">${ic.pulse.replace(/12/g,'17')}Predictive maintenance · Machine health</span></summary><div class="inner">
+    <p class="sub" style="font-size:13px;margin:0 0 12px">Estimated from cycles run this week, reported issues and sensor data. Lowest scores first — check these machines before they break down.</p>
+    <div class="hlist">${list.map(({m,h})=>`<div class="hrow"><div class="hname"><b>${esc(m.name)}</b><small>${h.cycles} cycles this week${h.open?` · ${h.open} open issue${h.open>1?'s':''}`:''}${m.sensor?' · live sensor ✓':''}</small></div>
+      <div class="hbar"><i class="h-${h.cls}" style="width:${h.score}%"></i></div><span class="hval h-${h.cls}">${h.score}%</span><span class="tag health h-${h.cls}">${h.label}</span></div>`).join('')}</div>
+  </div></details>`;
+}
+
+// ---------- green impact (estimate) ----------
+// Assumption: ~30% of washes would otherwise involve a wasted trip (machine busy) or a machine idling
+// with finished laundry. Each avoided trip/idle ≈ 2.7 L water (re-rinse / partial re-runs) and ≈ 0.095 kWh.
+const GREEN={share:.30,water:2.7,kwh:.095};
+function greenStats(){
+  const wk=Date.now()-7*864e5,washes=S.log.filter(l=>l.t>=wk).length,trips=Math.round(washes*GREEN.share);
+  return{washes,trips,water:Math.round(trips*GREEN.water/10)*10,kwh:Math.round(trips*GREEN.kwh)};
+}
+function greenCard(){
+  const g=greenStats();
+  return`<button class="green-card" data-act="green" title="How is this estimated?">${ic.leaf}<span><b>≈${g.water} L water &amp; ${g.kwh} kWh saved this week</b><small>Estimate · fewer unnecessary trips and less idle running</small></span>${ic.info}</button>`;
+}
+function greenInfo(){
+  const g=greenStats();
+  showModal(`<h2>${ic.leaf} Green impact (estimate)</h2><p>How WashQ reduces waste in Block ${BLOCK}:</p>
+    <div class="kv">
+      <div><span>Washes this week</span><b>${g.washes}</b></div>
+      <div><span>Unnecessary trips / idle runs avoided (≈${GREEN.share*100}%)</span><b>${g.trips}</b></div>
+      <div><span>Water per avoided trip</span><b>≈${GREEN.water} L</b></div>
+      <div><span>Electricity per avoided trip</span><b>≈${GREEN.kwh} kWh</b></div>
+      <div><span>Estimated savings</span><b>≈${g.water} L · ${g.kwh} kWh</b></div>
+    </div>
+    <p style="margin-top:14px"><small>A simple model for illustration, not a measurement: live availability, queues and bookings mean fewer empty trips and machines sitting idle with finished loads.</small></p>
+    <div class="actions"><button class="btn primary" data-close>Got it</button></div>`);
+  $('[data-close]').onclick=closeModal;
+}
+
+// ---------- detergent / load checklist (before OTP) ----------
+function checklistDialog(m,next){
+  const items=[['Detergent added','Right amount in the drawer'],['Pockets checked','No coins, pens or tissues'],['Load balanced','Not over-filled, spread evenly']];
+  showModal(`<h2>Quick check before you start</h2><p>Takes two seconds and helps avoid re-washes and stuck machines.</p>
+    <div class="opts checks">${items.map(([t,d],i)=>`<label class="opt"><input type="checkbox" ${prefs.checks&&prefs.checks[i]?'checked':''}><div><b>${t}</b><small>${d}</small></div></label>`).join('')}</div>
+    <div class="actions"><button class="btn tonal" data-act="release" data-id="${m.id}">Cancel</button><button class="btn primary" id="ckGo">${ic.check}Got it, continue</button></div>`);
+  $('#ckGo').onclick=()=>{prefs.checks=[...document.querySelectorAll('.checks input')].map(c=>c.checked);savePrefs();next()};
+  setTimeout(()=>$('#ckGo')&&$('#ckGo').focus(),60);
+}
+
+// ---------- share-a-load matching (simulated + cross-tab) ----------
+function findShareMatch(m){
+  const now=Date.now(),W=20*60000;
+  S.sharePool=(S.sharePool||[]).filter(p=>now-p.t<W&&p.client!==ME);
+  const cand=S.sharePool[0];
+  S.sharePool.push({client:ME,name:who()||'A student',t:now,mid:m.id});save();
+  if(!cand)return;
+  const [first,room]=String(cand.name).split('·').map(x=>x.trim());
+  prefs.shareMatch={first:first||'Someone',room:room||'nearby',t:now,until:now+15*60000,block:BLOCK};savePrefs();
+}
+
+// ---------- leaderboard ----------
+function leaderboard(){
+  const o=BLOCKS[BLOCK].o,U=i=>MOCK_USERS[(i+o)%MOCK_USERS.length];
+  const rows=[[U(0),11,'⚡ Fastest Collector','Avg pickup 3 min after cycle ends'],[U(3),9,'🌱 Eco Streak','6 off-peak washes in a row'],[U(6),8,'🎯 Always On Time','Checked in to every booking'],[U(8),7,'🤝 Load Sharer','Shared 3 loads this week']];
+  return`<details class="sect lb" ${prefs.lbOpen?'open':''} ontoggle="window.__lb(this.open)"><summary><span class="sum-t">${ic.trophy}This week’s top users</span></summary><div class="inner"><div class="lb-list">
+    ${rows.map(([n,w,b,d],i)=>{const [nm,rm]=n.split('·').map(x=>x.trim());return`<div class="lb-row"><span class="rank r${i+1}">${i+1}</span><div class="grow"><b>${esc(nm)}</b> <small>${esc(rm)}</small><small class="lb-d">${d}</small></div><span class="lb-badge">${b}</span><span class="lb-w">${w} washes</span></div>`}).join('')}
+  </div></div></details>`;
+}
+window.__lb=o=>{prefs.lbOpen=o;savePrefs()};
 
 // ================= Backend-authorised QR unlock =================
 // Booking → Booking Confirmation → Scan Machine QR → Machine Verification → Enter Password → Unlocking → Machine Unlocked
@@ -3399,8 +3735,8 @@ const okSvg='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke=
 // ---------- QR parsing: machine identity only ----------
 function parseMachineQR(text){
   const t=String(text||'').trim();let m;
-  if((m=t.match(/machine_id=(WM-\d{2,4})/i)))return m[1].toUpperCase();
-  if((m=t.match(/^(WM-\d{2,4})$/i)))return m[1].toUpperCase();
+  if((m=t.match(/machine_id=(WM-[A-C]?\d{2,4})/i)))return m[1].toUpperCase();
+  if((m=t.match(/^(WM-[A-C]?\d{2,4})$/i)))return m[1].toUpperCase();
   if((m=t.match(/#\/machine\/(\d+)/)))return mcode(+m[1]);
   return null;
 }
@@ -3483,7 +3819,7 @@ function manualEntry(){
     <div class="actions"><button type="button" class="btn tonal" id="mc">Back to camera</button><button class="btn primary">Verify</button></div></form>`);
   setTimeout(()=>$('#mi')&&$('#mi').focus(),80);
   $('#mc').onclick=()=>hideSheet();
-  $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const code=/^\d+$/.test(raw)?mcode(+raw):null;
+  $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const mm=raw.match(/^([A-C])?(\d{1,4})$/);const code=mm?(mm[1]?'WM-'+mm[1]+mm[2].padStart(2,'0'):mcode(+mm[2])):null;
     if(!code){toast('Enter a valid machine ID like WM-04');return}SC.busy=true;verifyMachine(SC.b,code)};
 }
 function sheet(html){const s=$('#scS');if(!s)return;s.innerHTML=`<div class="dialog">${html}</div>`;s.classList.add('on')}
@@ -3539,6 +3875,7 @@ function unlocked(b,code){
   $('#ud').onclick=()=>{closeScanner();location.hash='#/machine/'+b.mid};
 }
 
+initBlockSel();
 parseRoute();
 setInterval(tick,1000);
 initApi();

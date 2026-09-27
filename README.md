@@ -4,6 +4,15 @@ Real-time washing machine availability for hostel students. A single self-contai
 
 **Features:** live machine dashboard (pre-loaded with realistic demo activity), preset + custom wash durations (1–180 min), Reserve & Start with a 4-digit code (OTP unlock), slot booking with a 10-minute check-in window that releases no-shows, "Notify me when free" queue, a Machine Setup page for generating and downloading QR codes, usage analytics, dark mode, a glass-style theme whose background colour follows overall availability, and an optional Machine 1 sensor feed read from `sensor/machine1.json`.
 
+## Demo features (v6)
+* **Hostel block switcher** (Block A/B/C, default C) in the header. Each block has its own machines and mock data, and the last choice is remembered. QR IDs: Block C `WM-04`, other blocks `WM-A04`, `WM-B04`.
+* **Report Issue** (wrench icon on each card) marks the machine "Reported" and adds an entry to the **Maintenance log** on the Setup page, where the warden can mark it resolved.
+* **Predictive maintenance health score** (mock) on each card and as a sorted list on the Setup page. Heavy use this week, open or recent issues and a per-machine age factor lower the score; normal readings from the live sensor keep it high.
+* **Pre-wash checklist** (detergent, pockets, load balanced) before the OTP step, cleared with one tap.
+* **Green impact estimate**: ≈30% of washes avoid a wasted trip or idle run × 2.7 L water and 0.095 kWh each. Tap the card to see the calculation.
+* **Share-a-load**: optional toggle when reserving; shows a non-blocking banner if someone else is open to sharing (simulated + across tabs).
+* **Top users leaderboard**: collapsible section at the bottom of the dashboard (mock data).
+
 ## Run (with the unlock backend)
 ```
 python3 server.py            # http://localhost:8080 (optional: --port 9000)

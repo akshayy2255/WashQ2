@@ -53,7 +53,7 @@ login_fails = {}   # key -> [timestamps]
 class ApiError(Exception):
     def __init__(self, status, code, msg): super().__init__(msg); self.status, self.code, self.msg = status, code, msg
 
-MACHINE_RE = re.compile(r"^WM-\d{2,4}$")
+MACHINE_RE = re.compile(r"^WM-[A-C]?\d{2,4}$")
 def norm_machine(v):
     v = str(v or "").strip().upper()
     if not MACHINE_RE.match(v): raise ApiError(400, "bad_machine", "That QR code isn't a WashQ machine code.")

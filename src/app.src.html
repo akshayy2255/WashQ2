@@ -11,9 +11,10 @@
 <header>
   <div class="bar">
     <a class="logo" href="#/"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8H16"/><path d="M12 8.2c1.6 2 2.6 3.4 2.6 4.7a2.6 2.6 0 0 1-5.2 0c0-1.3 1-2.7 2.6-4.7z" fill="currentColor" fill-opacity=".18"/></svg><span>WashQ</span></a>
+    <div class="block-wrap" title="Switch hostel block"><select id="blockSel" class="block-sel" aria-label="Hostel block"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option></select></div>
     <nav>
-      <a href="#/" data-r="home">Machines</a>
-      <a href="#/admin" data-r="admin">Analytics</a>
+      <a href="#/" data-r="home"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Machines</span></a>
+      <a href="#/admin" data-r="admin"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analytics</span></a>
     </nav>
     <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
     <button class="icon-btn" id="acctBtn" aria-label="Account" title="Account" style="display:none"></button>
@@ -30,7 +31,7 @@
 <script>
 (() => {
 'use strict';
-const KEY='washq.v3', PREF='washq.prefs', GRACE=10, CONFIRM=10, HOLD=5;
+const KEY='washq.v4', PREF='washq.prefs', GRACE=10, CONFIRM=10, HOLD=5;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const DUR=[{v:30,t:'Quick wash',d:'Lightly soiled, small loads'},{v:40,t:'Standard wash',d:'Everyday clothes, regular load'},{v:60,t:'Heavy load',d:'Bedsheets, towels, jeans, full drum'}];
@@ -60,36 +61,48 @@ function blank(id,name){return{id,name:name||('Machine '+id),state:'free',start:
 function reset(m){Object.assign(m,{state:'free',start:0,end:0,dur:0,user:'',owner:'',graceEnd:0,hold:null})}
 // Demo starting state — realistic mock activity. Everything stays fully interactive.
 const MOCK_USERS=['Aditya · C-204','Priya · C-112','Rohan · B-305','Sneha · A-118','Karan · C-220','Ishaan · B-401','Ananya · A-207','Vikram · C-315','Meera · B-108','Arjun · A-322'];
-function seed(){
-  const now=Date.now(),MS=60000,m=Array.from({length:15},(_,i)=>blank(i+1)),log=[];
-  const U=i=>MOCK_USERS[i%MOCK_USERS.length];
+function seed(blk='C'){
+  const B=BLOCKS[blk]||BLOCKS.C,N=B.n,o=B.o,now=Date.now(),MS=60000,m=Array.from({length:N},(_,i)=>blank(i+1)),log=[];
+  const U=i=>MOCK_USERS[(i+o)%MOCK_USERS.length];
+  const Mi=id=>blk==='C'?id:((id-1+o)%(N-1))+2;   // shuffle which machines are busy per block (never Machine 1)
+  const mk=id=>m[Mi(id)-1];
   // [machine, duration, minutes elapsed, user]  — Machine 1 left free for the live sensor
   [[3,60,38,U(0)],[5,40,9,U(1)],[7,45,33,U(4)],[10,30,4,U(3)],[13,90,61,U(5)]].forEach(([id,d,el,u])=>{
-    Object.assign(m[id-1],{state:'busy',dur:d,start:now-el*MS,end:now+(d-el)*MS,user:u,owner:'demo'});log.push({t:now-el*MS,d,m:id});
+    Object.assign(mk(id),{state:'busy',dur:d,start:now-el*MS,end:now+(d-el)*MS,user:u,owner:'demo'});log.push({t:now-el*MS,d,m:Mi(id)});
   });
   // cycle complete, waiting for pickup (grace period running)
   [[9,40,3,U(2)],[14,60,7,U(8)]].forEach(([id,d,sinceDone,u])=>{
-    const end=now-sinceDone*MS;Object.assign(m[id-1],{state:'done',dur:d,start:end-d*MS,end,graceEnd:end+GRACE*MS,user:u,owner:'demo'});log.push({t:end-d*MS,d,m:id});
+    const end=now-sinceDone*MS;Object.assign(mk(id),{state:'done',dur:d,start:end-d*MS,end,graceEnd:end+GRACE*MS,user:u,owner:'demo'});log.push({t:end-d*MS,d,m:Mi(id)});
   });
-  m[2].queue=[{name:U(6),client:'demo'},{name:U(9),client:'demo'}];   // Machine 3: 2 waiting
-  m[4].queue=[{name:U(7),client:'demo'}];                              // Machine 5: 1 waiting
-  m[12].queue=[{name:U(3),client:'demo'},{name:U(0),client:'demo'}];  // Machine 13: 2 waiting
+  mk(3).queue=[{name:U(6),client:'demo'},{name:U(9),client:'demo'}];   // Machine 3: 2 waiting
+  mk(5).queue=[{name:U(7),client:'demo'}];                              // Machine 5: 1 waiting
+  mk(13).queue=[{name:U(3),client:'demo'},{name:U(0),client:'demo'}];  // Machine 13: 2 waiting
   // usage pattern: quiet mornings, lunch bump 12–2 PM, big evening peak 6–10 PM, ~zero late night
   const w=[.3,.1,0,0,0,0,1,1.6,1.8,1.2,1,1.4,3.6,4.2,3.2,1.6,1.8,2.8,6,8.4,9,7.6,4.6,1.4];
   const durs=[30,40,40,60,45,30,40,60,90,40];
   for(let d=0;d<7;d++){const weekend=[0,6].includes(new Date(now-d*864e5).getDay());
     for(let h=0;h<24;h++){const n=Math.max(0,Math.round(w[h]*(weekend?1.25:1)*(0.75+Math.random()*0.5)));
       for(let k=0;k<n;k++){const day=new Date(now);day.setDate(day.getDate()-d);day.setHours(h,Math.floor(Math.random()*60),0,0);
-        if(day.getTime()<now-90*MS)log.push({t:day.getTime(),d:durs[(h+k+d)%durs.length],m:1+Math.floor(Math.random()*15)})}}}
+        if(day.getTime()<now-90*MS)log.push({t:day.getTime(),d:durs[(h+k+d)%durs.length],m:1+Math.floor(Math.random()*N)})}}}
   const slot=mins=>{const t=new Date(now+mins*MS);t.setMinutes(Math.ceil(t.getMinutes()/15)*15,0,0);return t.getTime()};
-  const bookings=[{id:'b1',mid:6,start:slot(75),dur:40,name:U(7),client:'demo',state:'upcoming'},
-                  {id:'b2',mid:11,start:slot(140),dur:60,name:U(8),client:'demo',state:'upcoming'}];
-  return{machines:m,log,bookings,nextId:16};
+  const bookings=[{id:'b1',mid:Mi(6),start:slot(75),dur:40,name:U(7),client:'demo',state:'upcoming'},
+                  {id:'b2',mid:Mi(11),start:slot(140),dur:60,name:U(8),client:'demo',state:'upcoming'}];
+  // open maintenance reports (lower those machines' health score)
+  const reports=[{id:'r1',mid:Mi(7),issue:'Making unusual noise',details:'Loud rattling during spin',t:now-26*3600e3,by:U(4),cleared:false},
+                 {id:'r2',mid:Mi(12),issue:'Not draining',details:'Water left in drum after cycle',t:now-5*3600e3,by:U(2),cleared:false},
+                 {id:'r3',mid:Mi(4),issue:'Door won\'t lock',details:'',t:now-3*864e5,by:U(9),cleared:true,clearedAt:now-2*864e5}];
+  const sharePool=[{client:'demo',name:U(1),t:now-4*MS}];   // someone open to sharing a load right now
+  return{machines:m,log,bookings,reports,sharePool,nextId:N+1};
 }
-let S=JSON.parse(localStorage.getItem(KEY)||'null')||seed();
-S.bookings=S.bookings||[];
-const save=()=>localStorage.setItem(KEY,JSON.stringify(S));save();
-window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){S=JSON.parse(e.newValue);lastKey='';render()}});
+// ----- hostel blocks: each block has its own machine set, persisted separately -----
+const BLOCKS={A:{n:12,o:3},B:{n:10,o:6},C:{n:15,o:0}};
+let BLOCK=prefs.block in BLOCKS?prefs.block:'C';
+{const qm=(new URLSearchParams(location.search).get('machine_id')||'').toUpperCase().match(/^WM-([A-C])\d/);if(qm)BLOCK=qm[1];else if(/^WM-\d/.test((new URLSearchParams(location.search).get('machine_id')||'').toUpperCase()))BLOCK='C'}
+const skey=b=>b==='C'?KEY:KEY+'.'+b;
+function loadBlock(b){const s=JSON.parse(localStorage.getItem(skey(b))||'null')||seed(b);s.bookings=s.bookings||[];s.reports=s.reports||[];s.sharePool=s.sharePool||[];return s}
+let S=loadBlock(BLOCK);
+const save=()=>localStorage.setItem(skey(BLOCK),JSON.stringify(S));save();
+window.addEventListener('storage',e=>{if(e.key===skey(BLOCK)&&e.newValue){S=loadBlock(BLOCK);lastKey='';render()}});
 const M=id=>S.machines.find(x=>x.id===id);
 
 // ---------- sound / notifications ----------
@@ -166,7 +179,7 @@ function tick(){
 // Polls sensor/machine1.json → {"state":"busy","remaining_min":23,"total_min":40} or {"state":"free"}.
 // If the file/endpoint isn't reachable, Machine 1 silently falls back to simulation.
 async function pollSensor(){
-  const m=M(1);if(!m)return;
+  const m=M(1);if(!m||BLOCK!=='C')return;  // real sensor is installed on Block C · Machine 1
   try{
     const r=await fetch('sensor/machine1.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
     const d=await r.json(),now=Date.now();
@@ -206,7 +219,7 @@ const ic={
   people:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg>'
 };
 function queueBtn(m){return inQueue(m)?`<button class="btn tonal" data-act="unqueue" data-id="${m.id}">✓ #${qpos(m)} in line · Leave</button>`
-  :`<button class="btn outline" data-act="queue" data-id="${m.id}">${ic.bell}Notify me when free</button>`}
+  :`<button class="btn outline" data-act="queue" data-id="${m.id}">${ic.bell}Notify me<span class="lg-only"> when free</span></button>`}
 function actionsFor(m){
   const i=info(m);
   if(i.cls==='free')return`<button class="btn primary" data-act="reserve" data-id="${m.id}">${ic.lock}Reserve &amp; Start</button>`;
@@ -226,7 +239,9 @@ function tagsFor(m){
   if(m.sensor)t.push('<span class="tag sensor"><span class="dot"></span>Live sensor</span>');
   const nb=nextBooking(m);if(nb)t.push(`<span class="tag">${ic.cal.replace(/17/g,'12')}Booked: ${range(nb)}${nb.client===ME?' · you':''}</span>`);
   if(m.queue.length)t.push(`<span class="tag">${ic.people}${m.queue.length} ${m.queue.length===1?'person':'people'} waiting</span>`);
-  return t.length?`<div class="tags">${t.join('')}</div>`:'';
+  if(openReports(m).length)t.push(`<span class="tag reported" title="${esc(openReports(m).map(r=>r.issue).join(', '))}">${ic.alert}Reported</span>`);
+  const h=health(m);t.push(`<span class="tag health h-${h.cls}" title="Predictive maintenance health score">${ic.pulse}Health ${h.score}% · ${h.label}</span>`);
+  return`<div class="tags">${t.join('')}</div>`;
 }
 function metaFor(m,i){
   if(i.cls==='free')return'Ready to use';
@@ -246,10 +261,10 @@ function card(m){
       <span class="badge ${i.cls}"><span class="dot"></span><span data-badge>${i.label}</span></span></div>
     <div><div class="progress ${i.cls}"><i style="width:${i.pct}%"></i></div><div class="plabel">${plabel(m,i)}</div></div>
     ${tagsFor(m)}
-    <div class="actions">${actionsFor(m)}<button class="mini" title="Book a time slot" data-act="book" data-id="${m.id}" style="align-self:center">${ic.cal}</button></div>
+    <div class="actions">${actionsFor(m)}<button class="mini" title="Book a time slot" aria-label="Book a time slot" data-act="book" data-id="${m.id}">${ic.cal}</button><button class="mini" title="Report an issue" aria-label="Report an issue" data-act="report" data-id="${m.id}">${ic.wrench}</button></div>
   </div>`;
 }
-const structKey=m=>{const i=info(m),nb=nextBooking(m);return[m.id,m.name,m.state,i.cls,i.label,i.owner,m.owner===ME,inQueue(m),qpos(m),m.queue.length,m.user,m.sensor,nb&&nb.id].join('|')};
+const structKey=m=>{const i=info(m),nb=nextBooking(m);return[openReports(m).length,health(m).score,m.id,m.name,m.state,i.cls,i.label,i.owner,m.owner===ME,inQueue(m),qpos(m),m.queue.length,m.user,m.sensor,nb&&nb.id].join('|')};
 
 // ---------- views ----------
 function viewHome(soft){
@@ -266,10 +281,12 @@ function viewHome(soft){
         <span class="chip"><span class="dot" style="background:var(--yellow-s)"></span>${c.done} ready to collect</span>
         ${c.hold?`<span class="chip"><span class="dot" style="background:var(--primary)"></span>${c.hold} reserved</span>`:''}
       </div>
+      ${greenCard()}
       <label class="switch"><input type="checkbox" id="onlyFree" ${prefs.onlyFree?'checked':''}><span class="track"></span>Show only free machines</label>
     </div>
     ${list.length?`<div class="grid">${list.map(card).join('')}</div>`:`<div class="empty">${S.machines.length?'No free machines right now.<br>Tap “Notify me when free” on a busy machine to join the queue.':'No machines yet. Add one from <a href="#/setup">Machine setup</a>.'}</div>`}
-    ${myBookingsSection()}`;
+    ${myBookingsSection()}
+    ${leaderboard()}`;
   $('#onlyFree').onchange=e=>{prefs.onlyFree=e.target.checked;savePrefs();lastKey='';render()};
 }
 function myBookingsSection(){
@@ -309,14 +326,14 @@ function viewMachine(soft){
         <div class="actions">${actionsFor(m)}</div>
       </div>
       <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:600">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div class="h2">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
         ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`:''}</div>`).join('')}</div>`
           :'<div class="sub" style="font-size:14px">No upcoming bookings. Book ahead to skip the queue — you’ll get 10 minutes to check in when your slot starts.</div>'}
       </div>
     </div>`;
 }
 
-const mcode=id=>'WM-'+String(id).padStart(2,'0');
+const mcode=id=>'WM-'+(BLOCK==='C'?'':BLOCK)+String(id).padStart(2,'0');
 // QR payload identifies the physical machine only (machine_id=WM-04) — no credentials
 function machineURL(id){return location.origin+location.pathname.replace(/\/machine\/\d+\/?$/,'/')+'?machine_id='+mcode(id)+'#/machine/'+id}
 function qrObj(t){const q=qrcode(0,'M');q.addData(t);q.make();return q}
@@ -332,11 +349,11 @@ function downloadQR(m){
 }
 let justMade=null;
 function viewSetup(soft){
-  const key='setup'+justMade+S.machines.map(m=>m.id+m.name).join();
+  const key='setup'+BLOCK+justMade+S.machines.map(m=>m.id+m.name+health(m).score).join()+S.reports.map(r=>r.id+r.cleared).join();
   if(soft&&key===lastKey)return;lastKey=key;
   const nm=M(justMade);
   $('#app').innerHTML=`
-    <h1>Machine setup</h1><div class="sub">Admin · add machines and generate their QR codes</div>
+    <h1>Machine setup</h1><div class="sub">Admin · Block ${BLOCK} · machines, QR codes &amp; maintenance</div>
     <div class="panel" style="margin-top:24px">
       <form class="setup-form" id="addF">
         <div class="field"><label>Machine name / number</label><input id="mn" maxlength="30" placeholder="e.g. Machine ${S.nextId} or Block B – Washer 2" required></div>
@@ -346,7 +363,9 @@ function viewSetup(soft){
     </div>
     <details class="sect" open><summary>All machines (${S.machines.length})</summary><div class="inner">
       ${S.machines.length?`<div class="mlist">${S.machines.map(m=>`<div class="mrow"><div class="qr-box">${qrSVG(machineURL(m.id))}</div><div class="grow"><div>${esc(m.name)}</div><small>${mcode(m.id)} · /machine/${m.id}</small></div><div class="acts"><button class="link" data-act="dl" data-id="${m.id}">Download</button><button class="link danger" data-act="del" data-id="${m.id}">Delete machine</button></div></div>`).join('')}</div>`:'<div class="sub">No machines yet.</div>'}
-    </div></details>`;
+    </div></details>
+    ${healthSection()}
+    ${maintenanceSection()}`;
   $('#addF').onsubmit=e=>{e.preventDefault();const name=$('#mn').value.trim();if(!name)return;
     if(S.machines.some(m=>m.name.toLowerCase()===name.toLowerCase())){toast('A machine with that name already exists');return}
     const id=S.nextId++;S.machines.push(blank(id,name));save();justMade=id;lastKey='';render();toast(`${name} added`)};
@@ -373,15 +392,15 @@ function viewAdmin(soft){
       <div class="panel kpi"><div class="k">In use right now</div><div class="v">${busyNow}<span style="font-size:18px;color:var(--muted)"> / ${S.machines.length}</span></div></div>
     </div>
     <div class="panel">
-      <div style="font-weight:600">Usage by hour of day</div><div class="sub" style="font-size:13px">Wash starts per hour, summed over the last 7 days</div>
+      <div class="h2">Usage by hour of day</div><div class="sub" style="font-size:13px">Wash starts per hour, summed over the last 7 days</div>
       <div class="chart">${hours.map((v,h)=>`<div class="col"><span class="tip">${v}</span><div class="b ${h===peak?'peak':''}" style="height:0" data-h="${v/max*100}"></div></div>`).join('')}</div>
       <div class="xl">${hours.map((_,h)=>`<span>${h%3===0?hl(h):''}</span>`).join('')}</div>
       <div class="legend"><span><span class="dot" style="background:var(--red)"></span>Peak hour (${hl(peak)})</span><span><span class="dot" style="background:var(--primary)"></span>Other hours</span></div>
     </div>
     <div class="kpis">
-      <div class="panel"><div style="font-weight:600;margin-bottom:6px">Bottleneck insight</div><div class="sub" style="font-size:14px">Busiest hours: <b style="color:var(--text)">${top}</b>. Quietest daytime hours: <b style="color:var(--text)">${quiet}</b>. Encourage students to book slots in quieter hours before adding machines.</div></div>
+      <div class="panel"><div class="h2" style="margin-bottom:8px">Bottleneck insight</div><div class="sub" style="font-size:14px">Busiest hours: <b style="color:var(--text)">${top}</b>. Quietest daytime hours: <b style="color:var(--text)">${quiet}</b>. Encourage students to book slots in quieter hours before adding machines.</div></div>
       <div class="panel settings">
-        <div style="font-weight:600">Demo controls</div>
+        <div class="h2">Demo controls</div>
         <label class="switch"><input type="checkbox" id="demo" ${prefs.demo?'checked':''}><span class="track"></span>Fast mode (1 min = 1 sec) for testing</label>
         <div class="row"><button class="btn tonal" id="testN">Test notification</button><button class="btn tonal" id="reset">Reset demo data</button></div>
       </div>
@@ -399,9 +418,11 @@ function banners(){
   const now=Date.now(),items=[];
   S.machines.filter(m=>m.state==='done'&&m.owner===ME).forEach(m=>items.push({k:'c'+m.id,h:`<div style="flex:1"><b>Please collect your laundry</b> from ${esc(m.name)} · auto-release in <span data-t>${fmt(m.graceEnd-now)}</span></div><button class="btn warn" data-act="collect" data-id="${m.id}">Collected</button>`,t:m.graceEnd}));
   S.bookings.filter(b=>b.client===ME&&b.state==='pending').forEach(b=>items.push({k:'b'+b.id,h:`<div style="flex:1"><b>Your slot on ${esc(M(b.mid).name)} has started.</b> Check in within <span data-t>${fmt(b.confirmBy-now)}</span></div><button class="btn warn" data-act="checkin" data-id="${b.mid}">I'm here</button>`,t:b.confirmBy}));
+  const sm=prefs.shareMatch;
+  if(sm&&sm.until>now&&sm.block===BLOCK)items.push({k:'s'+sm.t,cls:'share',ico:ic.users,h:`<div style="flex:1"><b>${esc(sm.first)} (${esc(sm.room)})</b> is also doing laundry now — want to split a machine?</div><div class="banner-acts"><button class="btn tonal" data-act="share-no">Dismiss</button><button class="btn primary" data-act="share-yes">Suggest splitting</button></div>`,t:sm.until});
   const warn='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
   const b=$('#banners'),k=items.map(x=>x.k).join();
-  if(b.dataset.k!==k){b.innerHTML=items.map(x=>`<div class="banner">${warn}${x.h}</div>`).join('');b.dataset.k=k}
+  if(b.dataset.k!==k){b.innerHTML=items.map(x=>`<div class="banner ${x.cls||''}">${x.ico||warn}${x.h}</div>`).join('');b.dataset.k=k}
   else b.querySelectorAll('[data-t]').forEach((s,ix)=>s.textContent=fmt(items[ix].t-now));
 }
 function setMood(){
@@ -464,13 +485,17 @@ function reserveDialog(id){
   showModal(`<form id="f"><h2>Reserve ${esc(m.name)}</h2><p>Pick a cycle. You’ll get a one-time code to confirm you’re at the machine.</p>
     ${durField(d.html)}
     ${nameFields()}
+    <label class="switch share-sw"><input type="checkbox" id="shareOk" ${prefs.share?'checked':''}><span class="track"></span><span>Open to sharing this load with someone else doing laundry now <small>(optional)</small></span></label>
     <div class="msg err" id="msg"></div>
     <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary">Reserve &amp; get code</button></div></form>`);
   $('[data-close]').onclick=closeModal;wireDur();
   $('#f').onsubmit=e=>{e.preventDefault();askPermission();readName();
     if(!isFree(m)){closeModal();toast('Someone just reserved this machine');return}
     const dur=readDur(limitFor(m));if(dur==null)return;
-    m.hold={client:ME,until:Date.now()+HOLD*MIN(),dur,user:who(),code:newCode(),tries:0};save();lastKey='';render();otpDialog(id)};
+    const share=$('#shareOk').checked;prefs.share=share;savePrefs();
+    m.hold={client:ME,until:Date.now()+HOLD*MIN(),dur,user:who(),code:newCode(),tries:0,share};save();lastKey='';render();
+    if(share)findShareMatch(m);
+    checklistDialog(m,()=>otpDialog(id))};
 }
 const newCode=()=>String(Math.floor(1000+Math.random()*9000));
 function otpDialog(id){
@@ -577,6 +602,11 @@ document.addEventListener('click',e=>{
   const id=+el.dataset.id,m=M(id);
   switch(el.dataset.act){
     case'reserve':reserveDialog(id);break;
+    case'report':reportDialog(id);break;
+    case'resolve':{const r=S.reports.find(x=>x.id===el.dataset.rid);if(r){r.cleared=true;r.clearedAt=Date.now();save();lastKey='';render();toast(`Issue on ${M(r.mid)?M(r.mid).name:'machine'} marked as resolved`)}break}
+    case'green':greenInfo();break;
+    case'share-no':prefs.shareMatch=null;savePrefs();banners();break;
+    case'share-yes':{const sm=prefs.shareMatch;prefs.shareMatch=null;savePrefs();banners();toast(`Suggestion sent to ${sm?sm.first:'them'} — they'll see your machine number`);break}
     case'scan':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b)openScanner(b);break}
     case'resume':otpDialog(id);break;
     case'checkin':{const b=activeBooking(m);if(b&&b.client===ME)confirmDialog(b.id);break}
@@ -594,7 +624,9 @@ document.addEventListener('click',e=>{
   }
 });
 
+/*FEATURES_JS*/
 /*UNLOCK_JS*/
+initBlockSel();
 parseRoute();
 setInterval(tick,1000);
 initApi();
