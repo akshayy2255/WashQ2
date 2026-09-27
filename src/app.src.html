@@ -16,6 +16,7 @@
       <a href="#/admin" data-r="admin">Analytics</a>
     </nav>
     <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+    <button class="icon-btn" id="acctBtn" aria-label="Account" title="Account" style="display:none"></button>
     <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
   </div>
 </header>
@@ -123,6 +124,7 @@ function freeMachine(m){
 }
 function releaseBooking(b,reason){
   S.bookings=S.bookings.filter(x=>x.id!==b.id);
+  if(b.sid&&b.client===ME&&API.ok&&!b.unlocked)api('DELETE','/api/bookings/'+b.sid).catch(()=>{});
   const m=M(b.mid);if(!m)return;
   if(b.client===ME&&reason==='noshow')notify(`Slot released · ${m.name}`,`You didn't check in within ${CONFIRM} minutes, so your booking was cancelled.`);
   if(m.hold&&m.hold.bookingId===b.id)m.hold=null;
@@ -188,6 +190,7 @@ const ic={
   cal:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
   x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   lock:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  scan:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg>',
   people:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg>'
 };
 function queueBtn(m){return inQueue(m)?`<button class="btn tonal" data-act="unqueue" data-id="${m.id}">✓ #${qpos(m)} in line · Leave</button>`
@@ -198,6 +201,7 @@ function actionsFor(m){
   if(i.cls==='hold'){
     if(i.owner===ME){
       if(i.b&&i.b.state==='pending')return`<button class="btn primary" data-act="checkin" data-id="${m.id}">Yes, I'm here</button>`;
+      if(i.b&&i.b.sid)return`<button class="btn primary" data-act="scan" data-bid="${i.b.id}">${ic.scan}Scan Machine QR</button>`;
       return`<button class="btn primary" data-act="resume" data-id="${m.id}">${ic.lock}Enter unlock code</button>`;
     }
     return queueBtn(m);
@@ -259,7 +263,7 @@ function viewHome(soft){
 function myBookingsSection(){
   const mine=S.bookings.filter(b=>b.client===ME).sort((a,b)=>a.start-b.start);
   if(!mine.length)return'';
-  return`<details class="sect" ${prefs.bOpen?'open':''} ontoggle="window.__bt(this.open)"><summary>My bookings (${mine.length})</summary><div class="inner"><div class="blist">${mine.map(b=>`<div class="bitem"><div><b>${esc(M(b.mid).name)}</b> · ${range(b)}<br><small>${durName(b.dur)} · ${b.state==='upcoming'?'Upcoming':b.state==='pending'?'Check in now':'Checked in'}</small></div><button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`).join('')}</div></div></details>`;
+  return`<details class="sect" ${prefs.bOpen?'open':''} ontoggle="window.__bt(this.open)"><summary>My bookings (${mine.length})</summary><div class="inner"><div class="blist">${mine.map(b=>`<div class="bitem"><div><b>${esc(M(b.mid).name)}</b> · ${range(b)}<br><small>${durName(b.dur)} · ${b.state==='upcoming'?'Upcoming':b.state==='pending'?'Check in now':'Checked in'}</small></div><div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div></div>`).join('')}</div></div></details>`;
 }
 window.__bt=o=>{prefs.bOpen=o;savePrefs()};
 function patch(list){
@@ -294,13 +298,15 @@ function viewMachine(soft){
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:600">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
-        ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button>`:''}</div>`).join('')}</div>`
+        ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<div style="display:flex;gap:14px;flex:none">${b.sid?`<button class="link" data-act="scan" data-bid="${b.id}">Scan QR</button>`:''}<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`:''}</div>`).join('')}</div>`
           :'<div class="sub" style="font-size:14px">No upcoming bookings. Book ahead to skip the queue — you’ll get 10 minutes to check in when your slot starts.</div>'}
       </div>
     </div>`;
 }
 
-function machineURL(id){return location.origin+location.pathname.replace(/\/machine\/\d+\/?$/,'/')+'#/machine/'+id}
+const mcode=id=>'WM-'+String(id).padStart(2,'0');
+// QR payload identifies the physical machine only (machine_id=WM-04) — no credentials
+function machineURL(id){return location.origin+location.pathname.replace(/\/machine\/\d+\/?$/,'/')+'?machine_id='+mcode(id)+'#/machine/'+id}
 function qrObj(t){const q=qrcode(0,'M');q.addData(t);q.make();return q}
 const qrSVG=t=>qrObj(t).createSvgTag({cellSize:4,margin:0,scalable:true});
 function downloadQR(m){
@@ -327,7 +333,7 @@ function viewSetup(soft){
       ${nm?`<div class="newqr"><div class="qr-box">${qrSVG(machineURL(nm.id))}</div><div style="flex:1;min-width:200px"><div class="sub" style="font-size:13px">New machine added</div><div style="font-size:22px;font-weight:600;margin:4px 0 6px">${esc(nm.name)}</div><div class="url" style="margin:0 0 16px">${esc(machineURL(nm.id))}</div><div class="row"><button class="btn primary" style="flex:0 0 auto" data-act="dl" data-id="${nm.id}">Download QR</button><a class="btn tonal" style="flex:0 0 auto" href="#/machine/${nm.id}">Open machine</a></div></div></div>`:''}
     </div>
     <details class="sect" open><summary>All machines (${S.machines.length})</summary><div class="inner">
-      ${S.machines.length?`<div class="mlist">${S.machines.map(m=>`<div class="mrow"><div class="qr-box">${qrSVG(machineURL(m.id))}</div><div class="grow"><div>${esc(m.name)}</div><small>/machine/${m.id}</small></div><div class="acts"><button class="link" data-act="dl" data-id="${m.id}">Download</button><button class="link danger" data-act="del" data-id="${m.id}">Delete machine</button></div></div>`).join('')}</div>`:'<div class="sub">No machines yet.</div>'}
+      ${S.machines.length?`<div class="mlist">${S.machines.map(m=>`<div class="mrow"><div class="qr-box">${qrSVG(machineURL(m.id))}</div><div class="grow"><div>${esc(m.name)}</div><small>${mcode(m.id)} · /machine/${m.id}</small></div><div class="acts"><button class="link" data-act="dl" data-id="${m.id}">Download</button><button class="link danger" data-act="del" data-id="${m.id}">Delete machine</button></div></div>`).join('')}</div>`:'<div class="sub">No machines yet.</div>'}
     </div></details>`;
   $('#addF').onsubmit=e=>{e.preventDefault();const name=$('#mn').value.trim();if(!name)return;
     if(S.machines.some(m=>m.name.toLowerCase()===name.toLowerCase())){toast('A machine with that name already exists');return}
@@ -484,7 +490,15 @@ function bookDialog(id){
     if(S.bookings.some(b=>b.client===ME&&b.state==='upcoming'&&b.mid===id&&Math.abs(b.start-startMs)<3600000)){$('#msg').textContent='You already have a booking near this time on this machine.';return}
     readName();askPermission();
     const b={id:'b'+Date.now().toString(36),mid:id,start:startMs,dur,name:who(),client:ME,state:'upcoming'};
-    S.bookings.push(b);save();closeModal();lastKey='';render();toast(`Booked ${m.name} · ${range(b)}`);
+    const finish=()=>{S.bookings.push(b);save();lastKey='';render();if(b.sid)bookingConfirmed(b);else{closeModal();toast(`Booked ${m.name} · ${range(b)}`)}};
+    if(!API.ok)return finish();
+    const go=async()=>{
+      const btn=document.querySelector('#f button.primary');if(btn){btn.disabled=true;btn.textContent='Booking…'}
+      try{const r=await api('POST','/api/bookings',{machine_id:mcode(id),machine_name:m.name,start:startMs,dur});b.sid=r.booking.id;finish()}
+      catch(e){if(btn){btn.disabled=false;btn.textContent='Book slot'}if(e.status===401)return loginDialog(()=>bookDialog(id));const el=$('#msg');if(el)el.textContent=e.message;else toast(e.message)}
+    };
+    if(!prefs.token)return loginDialog(()=>{bookDialog(id)},'Sign in to book a slot');
+    go();
   };
   $('#f').onsubmit=e=>{e.preventDefault();const [h,mi]=$('#st').value.split(':').map(Number);const t=new Date();t.setHours(h,mi,0,0);if(t.getTime()<=Date.now())t.setDate(t.getDate()+1);submit(t.getTime())};
   $('#quick').onclick=()=>submit(Date.now()+60000);
@@ -492,7 +506,7 @@ function bookDialog(id){
 
 function confirmDialog(bid){
   const b=S.bookings.find(x=>x.id===bid);if(!b)return;const m=M(b.mid);
-  if(b.state==='confirmed'){openOtpForBooking(b);return}
+  if(b.state==='confirmed'){if(b.sid){openScanner(b);return}openOtpForBooking(b);return}
   openConfirm=bid;
   showModal(`<h2>Are you going to use ${esc(m.name)} now?</h2>
     <p>Your booked slot (${range(b)}) has started. Confirm within ${CONFIRM} minutes or your slot will be released.</p>
@@ -504,7 +518,9 @@ function confirmDialog(bid){
   $('#later').onclick=closeModal;
   $('#yes').onclick=()=>{
     if(M(b.mid).state!=='free'){toast(`${m.name} is still finishing a cycle — try again in a moment`);return}
-    b.state='confirmed';b.confirmBy=Date.now()+CONFIRM*MIN();openOtpForBooking(b);
+    b.state='confirmed';b.confirmBy=Date.now()+CONFIRM*MIN();
+    if(b.sid){const mm=M(b.mid);mm.hold={client:ME,until:b.confirmBy,dur:b.dur,user:b.name,bookingId:b.id,qr:true};save();lastKey='';render();closeModal();openScanner(b);return}
+    openOtpForBooking(b);
   };
 }
 function openOtpForBooking(b){
@@ -519,6 +535,7 @@ document.addEventListener('click',e=>{
   const id=+el.dataset.id,m=M(id);
   switch(el.dataset.act){
     case'reserve':reserveDialog(id);break;
+    case'scan':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b)openScanner(b);break}
     case'resume':otpDialog(id);break;
     case'checkin':{const b=activeBooking(m);if(b&&b.client===ME)confirmDialog(b.id);break}
     case'release':if(m.hold){const bid=m.hold.bookingId;m.hold=null;if(bid){const b=S.bookings.find(x=>x.id===bid);if(b)releaseBooking(b,'user')}save();closeModal();lastKey='';render();toast('Reservation released')}break;
@@ -535,8 +552,10 @@ document.addEventListener('click',e=>{
   }
 });
 
+/*UNLOCK_JS*/
 parseRoute();
 setInterval(tick,1000);
+initApi();
 pollSensor();setInterval(pollSensor,5000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
 // reopen my pending check-in popup on load
