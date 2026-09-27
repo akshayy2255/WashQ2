@@ -21,6 +21,7 @@
     </nav>
     <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
     <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
+    <button class="icon-btn bell-btn" id="bellBtn" aria-label="Notifications" aria-haspopup="dialog" aria-expanded="false"></button>
     <button class="icon-btn acct-btn" id="acctBtn" aria-label="Sign in" title="Sign in" aria-haspopup="dialog"></button>
   </div>
 </header>
@@ -118,7 +119,9 @@ function beep(times=3){try{actx=actx||new(window.AudioContext||window.webkitAudi
     o.connect(g).connect(actx.destination);o.start(t0+i*.35);o.stop(t0+i*.35+.3)}}catch(e){}}
 document.addEventListener('pointerdown',()=>{try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}},{once:true});
 function askPermission(){if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
-function notify(title,body){beep();toast(title+' — '+body);
+// n = {type,title,body,mid} → also recorded in the notification center (bell); toast/sound/system notification unchanged
+function notify(title,body,n){beep();toast(title+' — '+body);
+  try{n=n||{};pushNote(n.type||'confirm',n.title||title,n.body||body,n.mid)}catch(e){}
   try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(title,{body,tag:'washq-'+title});n.onclick=()=>{window.focus();n.close()}}}catch(e){}
   if(navigator.vibrate)navigator.vibrate([200,100,200]);}
 let toastT;
@@ -150,15 +153,15 @@ function limitFor(m,exceptBid){const n=S.bookings.filter(b=>b.mid===m.id&&b.id!=
 // ---------- engine ----------
 function freeMachine(m){
   const q=m.queue.slice(),first=q.shift();reset(m);m.queue=q;
-  if(first&&first.client===ME)notify(`${m.name} is free`,`You were first in line${first.name?' ('+first.name+')':''}. Head over now!`);
+  if(first&&first.client===ME)notify(`${m.name} is free`,`You were first in line${first.name?' ('+first.name+')':''}. Head over now!`,{type:'queue',title:'It’s your turn',body:`${m.name} is now free — you were next in the queue.`,mid:m.id});
 }
 function releaseBooking(b,reason){
   S.bookings=S.bookings.filter(x=>x.id!==b.id);
   if(b.sid&&b.client===ME&&API.ok&&!b.unlocked)api('DELETE','/api/bookings/'+b.sid).catch(()=>{});
   const m=M(b.mid);if(!m)return;
-  if(b.client===ME&&reason==='noshow')notify(`Slot released · ${m.name}`,`You didn't check in within ${CONFIRM} minutes, so your booking was cancelled.`);
+  if(b.client===ME&&reason==='noshow')notify(`Slot released · ${m.name}`,`You didn't check in within ${CONFIRM} minutes, so your booking was cancelled.`,{type:'released',title:'Slot released',body:`Your slot on ${m.name} was released since it wasn’t confirmed in time.`,mid:m.id});
   if(m.hold&&m.hold.bookingId===b.id)m.hold=null;
-  if(m.state==='free'){const first=m.queue.shift();if(first&&first.client===ME)notify(`${m.name} is available`,'A booked slot was released and you were first in line. Head over now!')}
+  if(m.state==='free'){const first=m.queue.shift();if(first&&first.client===ME)notify(`${m.name} is available`,'A booked slot was released and you were first in line. Head over now!',{type:'queue',title:'It’s your turn',body:`${m.name} is now free — a booked slot was released and you were next in the queue.`,mid:m.id})}
   if(openConfirm===b.id)closeModal();
 }
 function tick(){
@@ -166,14 +169,14 @@ function tick(){
   for(const m of S.machines){
     if(m.sensor)continue; // machine 1 driven by live sensor when available
     if(m.state==='busy'&&now>=m.end){m.state='done';m.graceEnd=m.end+GRACE*MIN();changed=true;
-      if(m.owner===ME)notify(`${m.name}: Cycle complete`,`${m.user?m.user.split('·')[0].trim()+', your':'Your'} laundry is ready. Please collect it within ${GRACE} minutes.`)}
+      if(m.owner===ME)notify(`${m.name}: Cycle complete`,`${m.user?m.user.split('·')[0].trim()+', your':'Your'} laundry is ready. Please collect it within ${GRACE} minutes.`,{type:'done',title:`${m.name} is ready!`,body:`Your wash cycle finished — please collect your clothes within ${GRACE} min.`,mid:m.id})}
     if(m.state==='done'&&now>=m.graceEnd){freeMachine(m);changed=true}
   }
   for(const m of S.machines)if(m.hold&&m.hold.until<=now&&!m.hold.bookingId){m.hold=null;changed=true;if(otpFor===m.id)closeModal(),toast('Reservation expired — code not entered in time')}
   for(const b of S.bookings.slice()){
     if(!M(b.mid)){S.bookings=S.bookings.filter(x=>x!==b);changed=true;continue}
     if(b.state==='upcoming'&&now>=b.start){b.state='pending';b.confirmBy=b.start+CONFIRM*MIN();changed=true;
-      if(b.client===ME){notify(`Your slot on ${M(b.mid).name} has started`,`Confirm within ${CONFIRM} minutes or your slot will be released.`);confirmDialog(b.id)}}
+      if(b.client===ME){notify(`Your slot on ${M(b.mid).name} has started`,`Confirm within ${CONFIRM} minutes or your slot will be released.`,{type:'confirm',title:'Confirm your booking',body:`Confirm your ${new Date(b.start).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} slot on ${M(b.mid).name} within ${CONFIRM} minutes.`,mid:b.mid});confirmDialog(b.id)}}
     else if((b.state==='pending'||b.state==='confirmed')&&now>=b.confirmBy){releaseBooking(b,'noshow');changed=true}
   }
   if(changed){save();lastKey=''}
@@ -192,7 +195,7 @@ async function pollSensor(){
     if(d.state==='busy'){const tot=(d.total_min||m.dur||40)*MIN(),end=now+(d.remaining_min||0)*MIN();
       if(m.state!=='busy')Object.assign(m,{state:'busy',dur:d.total_min||40,start:end-tot,user:m.user||'Sensor detected',owner:m.owner||''});
       m.end=end;}
-    else if(d.state==='free'&&m.state==='busy'){m.state='done';m.graceEnd=now+GRACE*MIN();if(m.owner===ME)notify(`${m.name}: Cycle complete`,'Sensor reports your wash is finished.')}
+    else if(d.state==='free'&&m.state==='busy'){m.state='done';m.graceEnd=now+GRACE*MIN();if(m.owner===ME)notify(`${m.name}: Cycle complete`,'Sensor reports your wash is finished.',{type:'done',title:`${m.name} is ready!`,body:`Sensor reports your wash cycle finished — please collect your clothes within ${GRACE} min.`,mid:m.id})}
     else if(d.state==='free'&&m.state==='done'&&now>=m.graceEnd)freeMachine(m);
     save();
   }catch(e){if(m.sensor){m.sensor=false;save();lastKey=''}}
@@ -420,7 +423,7 @@ function viewAdmin(soft){
     S.machines.forEach(m=>{if(m.state==='busy'){m.start=sc(m.start);m.end=sc(m.end)}if(m.state==='done')m.graceEnd=sc(m.graceEnd);if(m.hold)m.hold.until=sc(m.hold.until)});
     S.bookings.forEach(b=>{if(b.confirmBy)b.confirmBy=sc(b.confirmBy)});
     save();lastKey='';toast(prefs.demo?'Fast mode on — timers run 60× faster':'Fast mode off')};
-  $('#testN').onclick=()=>{askPermission();setTimeout(()=>notify('WashQ test','Notifications and sound are working.'),300)};
+  $('#testN').onclick=()=>{askPermission();setTimeout(()=>notify('WashQ test','Notifications and sound are working.',{type:'test'}),300)};
   $('#reset').onclick=()=>{if(confirm('Reset machines, bookings, queues and analytics to demo data?')){S=seed();save();lastKey='';render();toast('Demo data reset')}};
 }
 

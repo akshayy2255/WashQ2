@@ -68,7 +68,10 @@ function reportDialog(id){
     const issue=$('#ri').value,details=$('#rd').value.trim();
     if(issue==='Other'&&!details){$('#msg').textContent='Please describe the issue.';$('#rd').focus();return}
     S.reports.push({id:'r'+Date.now().toString(36),mid:id,issue,details,t:Date.now(),by:who()||'Anonymous student',cleared:false});
-    save();closeModal();lastKey='';render();toast(`Thanks — ${m.name} has been reported`)};
+    save();closeModal();lastKey='';render();toast(`Thanks — ${m.name} has been reported`);
+    // optional alert: a machine I used in the last 24 h, am queued for, or have booked
+    const recent=S.log.some(e=>e.u===ME&&e.m===id&&e.t>Date.now()-864e5)||inQueue(m)||S.bookings.some(b=>b.client===ME&&b.mid===id);
+    if(recent&&typeof pushNote==='function')pushNote('report',`${m.name} reported`,`“${issue}” was flagged on a machine you used recently — avoid until it’s checked.`,id,true)};
 }
 function maintenanceSection(){
   const rs=(S.reports||[]).slice().sort((a,b)=>(a.cleared-b.cleared)||(b.t-a.t));

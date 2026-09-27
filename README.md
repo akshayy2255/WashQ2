@@ -80,3 +80,16 @@ Edit the files in `src/`, then run `src/build.sh` to regenerate `index.html`.
   - Log out, which calls `/api/logout`.
 - When you're signed in, your name and room are filled in automatically in Reserve and Book.
 - Class/Year has no backend field, so it's saved on the device.
+
+## v10: notification center
+
+- **Bell.** The header order is now: … Settings → Theme → **Bell** → Avatar. A red badge on the bell shows the unread count.
+- **Panel.** The bell opens a dropdown on desktop or a bottom sheet on phones.
+  - Notifications are listed newest first. Each has a type icon (washer, clock, bell, calendar or wrench), a title, a description and a relative time.
+  - Unread items are highlighted and have a dot. Clicking one marks it read; clicking a read one opens its machine.
+  - The panel has "Mark all as read" and "Clear all".
+- **Live events.** Every existing `notify()` also adds a typed entry to the panel: cycle complete (timer or sensor), queue turn, booking confirm window, and slot auto-released. A machine you used in the last 24h, are queued for or have booked also creates an entry when it's reported.
+  - Toasts, the beep and system notifications work exactly as before.
+  - Live entries play the existing beep and briefly shake the bell (about 0.4s).
+- **Demo data.** The first load adds 5 demo notifications, 2 of them unread, so the badge shows "2". They play no sound.
+- **Storage.** The list is saved on the device in `localStorage['washq.notes']`, capped at 60 items, and syncs between open tabs.

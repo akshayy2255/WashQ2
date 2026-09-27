@@ -60,7 +60,7 @@ function washStats(){
   return{n,min};
 }
 function openAcctPanel(){
-  closeAcctPanel(true);closeModal();
+  if(typeof closeNotes==='function')closeNotes(true);closeAcctPanel(true);closeModal();
   const u=prefs.user,st=washStats();
   const scrim=document.createElement('div');scrim.className='acct-scrim';scrim.id='acctScrim';
   const p=document.createElement('div');p.className='acct-panel';p.id='acctPanel';p.setAttribute('role','dialog');p.setAttribute('aria-label','Your account');

@@ -821,6 +821,61 @@ body.acct-open header{z-index:100}
 }
 .acct-panel .btn.ap-out{color:var(--red)}
 .ap-bk-t b .nw{white-space:nowrap}
+
+/* ===== v10: notification center ===== */
+.bell-btn{position:relative}
+.nt-badge{position:absolute;top:2px;right:1px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5372b;color:#fff;
+  font-size:11px;font-weight:700;line-height:18px;text-align:center;font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--glass-strong,#fff);pointer-events:none;animation:ntpop .25s cubic-bezier(.2,.9,.3,1.5) both}
+[data-theme=dark] .nt-badge{box-shadow:0 0 0 2px #1e2030}
+@keyframes ntpop{from{transform:scale(.4)}to{transform:none}}
+.bell-btn.ring svg{animation:ntring .42s ease;transform-origin:50% 12%}
+@keyframes ntring{0%{transform:rotate(0)}18%{transform:rotate(16deg)}36%{transform:rotate(-14deg)}54%{transform:rotate(10deg)}72%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.bell-btn.ring svg{animation:none}}
+.bell-btn[aria-expanded=true]{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
+
+.nt-panel{width:380px;padding:16px 10px 10px;display:flex;flex-direction:column;overflow:hidden}
+.nt-top{display:flex;align-items:center;justify-content:space-between;padding:0 8px}
+.nt-top b{font-size:17px;font-weight:700;display:block}
+.nt-top small{font-size:12.5px;color:var(--muted)}
+.nt-bar{display:flex;justify-content:space-between;padding:8px 8px 10px;border-bottom:1px solid var(--glass-border);margin-bottom:6px}
+.nt-bar .link:disabled{opacity:.4;cursor:default}
+.nt-clr{color:var(--muted)}
+.nt-list{overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px;flex:1;min-height:0;padding:0 2px}
+.nt-item{position:relative;display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:12px 30px 12px 10px;border-radius:var(--r-md);color:var(--text);transition:background .15s}
+.nt-item:hover{background:color-mix(in srgb,var(--primary) 6%,transparent)}
+.nt-item.unread{background:color-mix(in srgb,var(--primary) 9%,transparent)}
+.nt-item.unread:hover{background:color-mix(in srgb,var(--primary) 13%,transparent)}
+.nt-ic{width:38px;height:38px;flex:none;border-radius:12px;display:grid;place-items:center}
+.nt-ic svg{width:19px;height:19px}
+.t-done{background:rgba(30,142,62,.13);color:#1e8e3e}
+.t-queue{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
+.t-confirm,.t-test{background:rgba(242,153,0,.15);color:#c77700}
+.t-released{background:rgba(120,120,140,.14);color:var(--muted)}
+.t-report{background:rgba(217,48,37,.12);color:#d93025}
+[data-theme=dark] .t-done{color:#5bd684}[data-theme=dark] .t-confirm,[data-theme=dark] .t-test{color:#ffb74d}[data-theme=dark] .t-report{color:#ff7b70}
+.nt-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nt-t b{font-size:14px;font-weight:600;line-height:1.3}
+.nt-item:not(.unread) .nt-t b{font-weight:500}
+.nt-t>span{font-size:13px;color:var(--muted);line-height:1.4}
+.nt-t small{font-size:11.5px;color:var(--muted);opacity:.85;margin-top:2px}
+.nt-dot{position:absolute;right:12px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
+.nt-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:34px 20px;color:var(--muted);font-size:13px}
+.nt-empty svg{opacity:.5;margin-bottom:4px}.nt-empty b{color:var(--text);font-size:15px}
+@media (min-width:601px){.nt-panel{max-height:min(560px,calc(100dvh - var(--ap-top,72px) - 16px))}}
+@media (max-width:600px){.nt-panel{width:auto;height:auto;max-height:82dvh;padding:10px 8px calc(10px + env(safe-area-inset-bottom))}}
+/* header fit with the extra bell (phones): single row, no wrapping */
+.bar>*{flex-shrink:0}
+nav{display:flex;flex-wrap:nowrap}
+.block-sel,#blockLbl{white-space:nowrap}
+@media (max-width:420px){
+  .bar{padding:8px 8px;gap:0}
+  .icon-btn{width:36px;height:36px}
+  nav a{padding:7px}
+  .block-sel{padding:0 22px 0 9px;font-size:12.5px;background-position:right 6px center}
+  .logo svg{width:24px;height:24px}
+  .acct-btn .avatar{width:28px;height:28px;font-size:11px}
+}
+@media (max-width:340px){.logo{display:none}}
 </style>
 </head>
 <body>
@@ -837,6 +892,7 @@ body.acct-open header{z-index:100}
     </nav>
     <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
     <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
+    <button class="icon-btn bell-btn" id="bellBtn" aria-label="Notifications" aria-haspopup="dialog" aria-expanded="false"></button>
     <button class="icon-btn acct-btn" id="acctBtn" aria-label="Sign in" title="Sign in" aria-haspopup="dialog"></button>
   </div>
 </header>
@@ -3231,7 +3287,9 @@ function beep(times=3){try{actx=actx||new(window.AudioContext||window.webkitAudi
     o.connect(g).connect(actx.destination);o.start(t0+i*.35);o.stop(t0+i*.35+.3)}}catch(e){}}
 document.addEventListener('pointerdown',()=>{try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}},{once:true});
 function askPermission(){if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
-function notify(title,body){beep();toast(title+' — '+body);
+// n = {type,title,body,mid} → also recorded in the notification center (bell); toast/sound/system notification unchanged
+function notify(title,body,n){beep();toast(title+' — '+body);
+  try{n=n||{};pushNote(n.type||'confirm',n.title||title,n.body||body,n.mid)}catch(e){}
   try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(title,{body,tag:'washq-'+title});n.onclick=()=>{window.focus();n.close()}}}catch(e){}
   if(navigator.vibrate)navigator.vibrate([200,100,200]);}
 let toastT;
@@ -3263,15 +3321,15 @@ function limitFor(m,exceptBid){const n=S.bookings.filter(b=>b.mid===m.id&&b.id!=
 // ---------- engine ----------
 function freeMachine(m){
   const q=m.queue.slice(),first=q.shift();reset(m);m.queue=q;
-  if(first&&first.client===ME)notify(`${m.name} is free`,`You were first in line${first.name?' ('+first.name+')':''}. Head over now!`);
+  if(first&&first.client===ME)notify(`${m.name} is free`,`You were first in line${first.name?' ('+first.name+')':''}. Head over now!`,{type:'queue',title:'It’s your turn',body:`${m.name} is now free — you were next in the queue.`,mid:m.id});
 }
 function releaseBooking(b,reason){
   S.bookings=S.bookings.filter(x=>x.id!==b.id);
   if(b.sid&&b.client===ME&&API.ok&&!b.unlocked)api('DELETE','/api/bookings/'+b.sid).catch(()=>{});
   const m=M(b.mid);if(!m)return;
-  if(b.client===ME&&reason==='noshow')notify(`Slot released · ${m.name}`,`You didn't check in within ${CONFIRM} minutes, so your booking was cancelled.`);
+  if(b.client===ME&&reason==='noshow')notify(`Slot released · ${m.name}`,`You didn't check in within ${CONFIRM} minutes, so your booking was cancelled.`,{type:'released',title:'Slot released',body:`Your slot on ${m.name} was released since it wasn’t confirmed in time.`,mid:m.id});
   if(m.hold&&m.hold.bookingId===b.id)m.hold=null;
-  if(m.state==='free'){const first=m.queue.shift();if(first&&first.client===ME)notify(`${m.name} is available`,'A booked slot was released and you were first in line. Head over now!')}
+  if(m.state==='free'){const first=m.queue.shift();if(first&&first.client===ME)notify(`${m.name} is available`,'A booked slot was released and you were first in line. Head over now!',{type:'queue',title:'It’s your turn',body:`${m.name} is now free — a booked slot was released and you were next in the queue.`,mid:m.id})}
   if(openConfirm===b.id)closeModal();
 }
 function tick(){
@@ -3279,14 +3337,14 @@ function tick(){
   for(const m of S.machines){
     if(m.sensor)continue; // machine 1 driven by live sensor when available
     if(m.state==='busy'&&now>=m.end){m.state='done';m.graceEnd=m.end+GRACE*MIN();changed=true;
-      if(m.owner===ME)notify(`${m.name}: Cycle complete`,`${m.user?m.user.split('·')[0].trim()+', your':'Your'} laundry is ready. Please collect it within ${GRACE} minutes.`)}
+      if(m.owner===ME)notify(`${m.name}: Cycle complete`,`${m.user?m.user.split('·')[0].trim()+', your':'Your'} laundry is ready. Please collect it within ${GRACE} minutes.`,{type:'done',title:`${m.name} is ready!`,body:`Your wash cycle finished — please collect your clothes within ${GRACE} min.`,mid:m.id})}
     if(m.state==='done'&&now>=m.graceEnd){freeMachine(m);changed=true}
   }
   for(const m of S.machines)if(m.hold&&m.hold.until<=now&&!m.hold.bookingId){m.hold=null;changed=true;if(otpFor===m.id)closeModal(),toast('Reservation expired — code not entered in time')}
   for(const b of S.bookings.slice()){
     if(!M(b.mid)){S.bookings=S.bookings.filter(x=>x!==b);changed=true;continue}
     if(b.state==='upcoming'&&now>=b.start){b.state='pending';b.confirmBy=b.start+CONFIRM*MIN();changed=true;
-      if(b.client===ME){notify(`Your slot on ${M(b.mid).name} has started`,`Confirm within ${CONFIRM} minutes or your slot will be released.`);confirmDialog(b.id)}}
+      if(b.client===ME){notify(`Your slot on ${M(b.mid).name} has started`,`Confirm within ${CONFIRM} minutes or your slot will be released.`,{type:'confirm',title:'Confirm your booking',body:`Confirm your ${new Date(b.start).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} slot on ${M(b.mid).name} within ${CONFIRM} minutes.`,mid:b.mid});confirmDialog(b.id)}}
     else if((b.state==='pending'||b.state==='confirmed')&&now>=b.confirmBy){releaseBooking(b,'noshow');changed=true}
   }
   if(changed){save();lastKey=''}
@@ -3305,7 +3363,7 @@ async function pollSensor(){
     if(d.state==='busy'){const tot=(d.total_min||m.dur||40)*MIN(),end=now+(d.remaining_min||0)*MIN();
       if(m.state!=='busy')Object.assign(m,{state:'busy',dur:d.total_min||40,start:end-tot,user:m.user||'Sensor detected',owner:m.owner||''});
       m.end=end;}
-    else if(d.state==='free'&&m.state==='busy'){m.state='done';m.graceEnd=now+GRACE*MIN();if(m.owner===ME)notify(`${m.name}: Cycle complete`,'Sensor reports your wash is finished.')}
+    else if(d.state==='free'&&m.state==='busy'){m.state='done';m.graceEnd=now+GRACE*MIN();if(m.owner===ME)notify(`${m.name}: Cycle complete`,'Sensor reports your wash is finished.',{type:'done',title:`${m.name} is ready!`,body:`Sensor reports your wash cycle finished — please collect your clothes within ${GRACE} min.`,mid:m.id})}
     else if(d.state==='free'&&m.state==='done'&&now>=m.graceEnd)freeMachine(m);
     save();
   }catch(e){if(m.sensor){m.sensor=false;save();lastKey=''}}
@@ -3533,7 +3591,7 @@ function viewAdmin(soft){
     S.machines.forEach(m=>{if(m.state==='busy'){m.start=sc(m.start);m.end=sc(m.end)}if(m.state==='done')m.graceEnd=sc(m.graceEnd);if(m.hold)m.hold.until=sc(m.hold.until)});
     S.bookings.forEach(b=>{if(b.confirmBy)b.confirmBy=sc(b.confirmBy)});
     save();lastKey='';toast(prefs.demo?'Fast mode on — timers run 60× faster':'Fast mode off')};
-  $('#testN').onclick=()=>{askPermission();setTimeout(()=>notify('WashQ test','Notifications and sound are working.'),300)};
+  $('#testN').onclick=()=>{askPermission();setTimeout(()=>notify('WashQ test','Notifications and sound are working.',{type:'test'}),300)};
   $('#reset').onclick=()=>{if(confirm('Reset machines, bookings, queues and analytics to demo data?')){S=seed();save();lastKey='';render();toast('Demo data reset')}};
 }
 
@@ -3831,7 +3889,10 @@ function reportDialog(id){
     const issue=$('#ri').value,details=$('#rd').value.trim();
     if(issue==='Other'&&!details){$('#msg').textContent='Please describe the issue.';$('#rd').focus();return}
     S.reports.push({id:'r'+Date.now().toString(36),mid:id,issue,details,t:Date.now(),by:who()||'Anonymous student',cleared:false});
-    save();closeModal();lastKey='';render();toast(`Thanks — ${m.name} has been reported`)};
+    save();closeModal();lastKey='';render();toast(`Thanks — ${m.name} has been reported`);
+    // optional alert: a machine I used in the last 24 h, am queued for, or have booked
+    const recent=S.log.some(e=>e.u===ME&&e.m===id&&e.t>Date.now()-864e5)||inQueue(m)||S.bookings.some(b=>b.client===ME&&b.mid===id);
+    if(recent&&typeof pushNote==='function')pushNote('report',`${m.name} reported`,`“${issue}” was flagged on a machine you used recently — avoid until it’s checked.`,id,true)};
 }
 function maintenanceSection(){
   const rs=(S.reports||[]).slice().sort((a,b)=>(a.cleared-b.cleared)||(b.t-a.t));
@@ -4352,7 +4413,7 @@ function washStats(){
   return{n,min};
 }
 function openAcctPanel(){
-  closeAcctPanel(true);closeModal();
+  if(typeof closeNotes==='function')closeNotes(true);closeAcctPanel(true);closeModal();
   const u=prefs.user,st=washStats();
   const scrim=document.createElement('div');scrim.className='acct-scrim';scrim.id='acctScrim';
   const p=document.createElement('div');p.className='acct-panel';p.id='acctPanel';p.setAttribute('role','dialog');p.setAttribute('aria-label','Your account');
@@ -4403,6 +4464,102 @@ async function loadMyBookings(){
   }catch(e){if($('#apList'))box.innerHTML=`<div class="ap-empty">${e.status===401?'Session expired — please sign in again.':esc(e.message)}</div>`;if(e.status===401)closeAcctPanel()}
 }
 window.addEventListener('hashchange',()=>closeAcctPanel(true));
+
+// ================= Notification center (bell) =================
+// Every live notify() (cycle complete, queue turn, confirm window, slot released, sensor) also lands here.
+// Stored per device in localStorage; seeded once with demo items (no sound for those).
+const NKEY='washq.notes';
+const NIC={
+  done:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><circle cx="12" cy="13.5" r="4.5"/><path d="M7.5 6h.01M10.5 6h3"/></svg>',
+  queue:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  confirm:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  released:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M10 14l4 4M14 14l-4 4"/></svg>',
+  report:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
+};
+NIC.test=NIC.confirm;
+const bellSvg='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+
+let NOTES=(()=>{try{return JSON.parse(localStorage.getItem(NKEY))}catch(e){return null}})();
+if(!NOTES||!Array.isArray(NOTES.items)){
+  // first run: demo notifications with varied ages; 2 unread → badge "2". Silent (not live events).
+  const n=Date.now(),mn=60000;
+  NOTES={items:[
+    {type:'done',title:'Machine 5 is ready!',body:'Your wash finished 3 min ago — please collect.',mid:5,blk:'C',t:n-3*mn,read:false},
+    {type:'queue',title:'It’s your turn',body:'Machine 2 is now free, you were next in queue.',mid:2,blk:'C',t:n-10*mn,read:false},
+    {type:'confirm',title:'Confirm your booking',body:'Machine 7, 4:30–5:00 PM slot. Confirm within 10 min.',mid:7,blk:'C',t:n-25*mn,read:true},
+    {type:'released',title:'Slot released',body:'Your Machine 9 booking was released after no confirmation.',mid:9,blk:'C',t:n-60*mn,read:true},
+    {type:'report',title:'Machine 4 reported',body:'Someone flagged “Won’t start” — avoid until checked.',mid:4,blk:'C',t:n-120*mn,read:true}
+  ].map((x,i)=>({id:'n'+(n-i).toString(36),...x})),demo:true};
+  localStorage.setItem(NKEY,JSON.stringify(NOTES));
+}
+const saveNotes=()=>{NOTES.items=NOTES.items.slice(0,60);localStorage.setItem(NKEY,JSON.stringify(NOTES))};
+const unread=()=>NOTES.items.filter(x=>!x.read).length;
+
+// called for every LIVE event (from notify) → list + badge + bell wiggle (sound is the existing beep in notify)
+function pushNote(type,title,body,mid,sound){
+  if(sound)beep(1);   // notify() already plays the existing alert beep; direct callers opt in
+  NOTES.items.unshift({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),type:NIC[type]?type:'confirm',title,body,mid:mid||null,blk:BLOCK,t:Date.now(),read:false});
+  saveNotes();renderBell(true);
+  if($('#ntPanel'))renderNoteList();
+}
+function renderBell(wiggle){
+  const b=$('#bellBtn');if(!b)return;const n=unread();
+  b.innerHTML=bellSvg+(n?`<span class="nt-badge" aria-hidden="true">${n>99?'99+':n}</span>`:'');
+  b.setAttribute('aria-label',n?`Notifications, ${n} unread`:'Notifications');b.title=b.getAttribute('aria-label');
+  if(wiggle){b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring');setTimeout(()=>b.classList.remove('ring'),450)}
+}
+function ago(t){
+  const s=Math.max(0,Math.round((Date.now()-t)/1000));
+  if(s<45)return'just now';const m=Math.round(s/60);if(m<60)return m+' min ago';
+  const h=Math.round(m/60);if(h<24)return h+(h===1?' hr ago':' hrs ago');
+  const d=Math.round(h/24);return d===1?'yesterday':d+' days ago';
+}
+function renderNoteList(){
+  const box=$('#ntList');if(!box)return;const items=NOTES.items.slice().sort((a,b)=>b.t-a.t);
+  $('#ntHead').textContent=unread()?`${unread()} unread`:'All caught up';
+  $('#ntAll').disabled=!unread();$('#ntClr').disabled=!items.length;
+  box.innerHTML=items.length?items.map(x=>`<button class="nt-item ${x.read?'':'unread'}" data-nid="${x.id}">
+      <span class="nt-ic t-${x.type}">${NIC[x.type]||NIC.confirm}</span>
+      <span class="nt-t"><b>${esc(x.title)}</b><span>${esc(x.body)}</span><small>${ago(x.t)}${x.blk&&x.blk!==BLOCK?' · Block '+x.blk:''}</small></span>
+      ${x.read?'':'<span class="nt-dot" aria-label="Unread"></span>'}</button>`).join('')
+    :`<div class="nt-empty">${bellSvg.replace(/20/g,'30')}<b>No notifications</b><span>Cycle-complete alerts, queue turns and booking reminders will show up here.</span></div>`;
+  box.querySelectorAll('.nt-item').forEach(el=>el.onclick=()=>{
+    const x=NOTES.items.find(i=>i.id===el.dataset.nid);if(!x)return;
+    if(!x.read){x.read=true;saveNotes();renderBell();el.classList.remove('unread');const d=el.querySelector('.nt-dot');d&&d.remove();$('#ntHead').textContent=unread()?`${unread()} unread`:'All caught up';$('#ntAll').disabled=!unread()}
+    else if(x.mid){closeNotes(true);if(x.blk&&x.blk!==BLOCK)switchBlock(x.blk);if(M(x.mid))location.hash='#/machine/'+x.mid}
+  });
+}
+function closeNotes(instant){
+  const p=$('#ntPanel'),s=$('#ntScrim');if(!p)return;clearInterval(closeNotes.t);
+  document.body.classList.remove('acct-open');const b=$('#bellBtn');b&&b.setAttribute('aria-expanded','false');
+  p.classList.remove('on');s&&s.classList.remove('on');const rm=()=>{p.remove();s&&s.remove()};instant?rm():setTimeout(rm,200);
+}
+function openNotes(){
+  if(typeof closeAcctPanel==='function')closeAcctPanel(true);closeNotes(true);closeModal();
+  const s=document.createElement('div');s.className='acct-scrim';s.id='ntScrim';
+  const p=document.createElement('div');p.className='acct-panel nt-panel';p.id='ntPanel';p.setAttribute('role','dialog');p.setAttribute('aria-label','Notifications');
+  p.innerHTML=`<div class="ap-grab"></div>
+    <div class="nt-top"><div><b>Notifications</b><small id="ntHead"></small></div><button class="icon-btn ap-x" id="ntX" aria-label="Close">${ic.x}</button></div>
+    <div class="nt-bar"><button class="link" id="ntAll">Mark all as read</button><button class="link nt-clr" id="ntClr">Clear all</button></div>
+    <div class="nt-list" id="ntList"></div>`;
+  document.body.append(s,p);document.body.classList.add('acct-open');$('#bellBtn').setAttribute('aria-expanded','true');
+  p.style.setProperty('--ap-top',(document.querySelector('header').getBoundingClientRect().bottom+8)+'px');
+  requestAnimationFrame(()=>{s.classList.add('on');p.classList.add('on')});
+  renderNoteList();
+  s.onclick=()=>closeNotes();$('#ntX').onclick=()=>closeNotes();
+  p.addEventListener('keydown',e=>{if(e.key==='Escape')closeNotes()});
+  $('#ntAll').onclick=()=>{NOTES.items.forEach(x=>x.read=true);saveNotes();renderBell();renderNoteList()};
+  $('#ntClr').onclick=()=>{if(!NOTES.items.length)return;NOTES.items=[];saveNotes();renderBell();renderNoteList();toast('Notifications cleared')};
+  closeNotes.t=setInterval(()=>{if(!$('#ntPanel'))return clearInterval(closeNotes.t);$('#ntList').querySelectorAll('.nt-item').forEach(el=>{const x=NOTES.items.find(i=>i.id===el.dataset.nid);if(x)el.querySelector('small').firstChild.textContent=ago(x.t)+(x.blk&&x.blk!==BLOCK?' · Block '+x.blk:'')})},30000);
+}
+function initBell(){
+  const b=$('#bellBtn');if(!b)return;renderBell();
+  b.onclick=e=>{e.stopPropagation();$('#ntPanel')?closeNotes():openNotes()};
+  window.addEventListener('hashchange',()=>closeNotes(true));
+  // other tabs/devices sharing storage: keep the badge in sync
+  window.addEventListener('storage',e=>{if(e.key===NKEY){try{NOTES=JSON.parse(e.newValue)||{items:[]}}catch(_){}renderBell();renderNoteList()}});
+}
+initBell();
 
 initBlockSel();
 parseRoute();
