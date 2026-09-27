@@ -1,0 +1,124 @@
+
+/* ===== v3 theme: Glassmorphism + status-based ambient colour ===== */
+@property --a1{syntax:'<color>';inherits:true;initial-value:#c7d2fe}
+@property --a2{syntax:'<color>';inherits:true;initial-value:#ddd6fe}
+@property --a3{syntax:'<color>';inherits:true;initial-value:#bfdbfe}
+@property --a4{syntax:'<color>';inherits:true;initial-value:#eef2ff}
+
+:root{
+  /* neutral (mixed) – light */
+  --a1:#a5b4fc;--a2:#d8b4fe;--a3:#93c5fd;--a4:#eef2ff;
+  --glass:rgba(255,255,255,.58);--glass-strong:rgba(255,255,255,.78);--glass-soft:rgba(255,255,255,.38);
+  --glass-border:rgba(255,255,255,.65);--glass-shadow:0 8px 32px rgba(31,38,95,.12),0 1px 2px rgba(31,38,95,.06);
+  --surface:var(--glass);--surface2:rgba(255,255,255,.5);--border:rgba(60,64,90,.14);
+  --text:#12142b;--muted:#474b63;
+  --shadow:var(--glass-shadow);--shadow-h:0 12px 40px rgba(31,38,95,.18);
+  --primary:#3b4fd8;
+  --blur:saturate(170%) blur(18px);
+  transition:--a1 1.6s ease,--a2 1.6s ease,--a3 1.6s ease,--a4 1.6s ease;
+}
+:root[data-mood=free]{--a1:#6ee7b7;--a2:#5eead4;--a3:#a7f3d0;--a4:#ecfdf5}
+:root[data-mood=busy]{--a1:#fdba74;--a2:#fca5a5;--a3:#fcd34d;--a4:#fff7ed}
+
+[data-theme=dark]{
+  --a1:#312e81;--a2:#4c1d95;--a3:#1e3a8a;--a4:#0b0c14;
+  --glass:rgba(24,26,40,.55);--glass-strong:rgba(30,32,50,.82);--glass-soft:rgba(255,255,255,.07);
+  --glass-border:rgba(255,255,255,.1);--glass-shadow:0 8px 32px rgba(0,0,0,.45);
+  --surface:var(--glass);--surface2:rgba(255,255,255,.07);--border:rgba(255,255,255,.12);
+  --text:#eef0f7;--muted:#aab0c4;--primary:#a5b4fc;--primary-t:#0d1033;
+  --shadow:var(--glass-shadow);--shadow-h:0 12px 40px rgba(0,0,0,.6);
+}
+[data-theme=dark][data-mood=free]{--a1:#064e3b;--a2:#115e59;--a3:#1e3a5f;--a4:#07100f}
+[data-theme=dark][data-mood=busy]{--a1:#7c2d12;--a2:#6b1d2a;--a3:#713f12;--a4:#120a08}
+
+/* ambient animated background */
+html,body{background:var(--a4)}
+body{min-height:100vh;position:relative}
+body::before,body::after{content:"";position:fixed;inset:-20%;z-index:-2;pointer-events:none}
+body::before{
+  background:
+    radial-gradient(40% 45% at 18% 22%,var(--a1) 0%,transparent 70%),
+    radial-gradient(38% 42% at 82% 18%,var(--a2) 0%,transparent 70%),
+    radial-gradient(45% 50% at 70% 85%,var(--a3) 0%,transparent 70%),
+    radial-gradient(35% 40% at 12% 88%,var(--a2) 0%,transparent 70%),
+    var(--a4);
+  animation:drift 38s ease-in-out infinite alternate;
+  opacity:.9;
+}
+/* readability veil */
+body::after{z-index:-1;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.05))}
+[data-theme=dark] body::after{background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.1))}
+@keyframes drift{
+  0%{transform:translate3d(0,0,0) rotate(0) scale(1)}
+  50%{transform:translate3d(4%,-3%,0) rotate(8deg) scale(1.08)}
+  100%{transform:translate3d(-3%,4%,0) rotate(-6deg) scale(1.04)}
+}
+
+/* glass surfaces */
+header,.card,.panel,.dialog,.qr-card,details.sect,.chip,.banner,.toast{
+  background:var(--glass);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow);
+}
+header{background:var(--glass-soft);border-width:0 0 1px;box-shadow:0 1px 0 rgba(255,255,255,.2)}
+.card{border-radius:20px}
+.card:hover{box-shadow:var(--shadow-h);transform:translateY(-2px)}
+.card.mine{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary),var(--glass-shadow)}
+.panel,details.sect{border-radius:20px}
+.dialog{background:var(--glass-strong);border-radius:26px}
+.scrim{background:rgba(10,12,30,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.banner{background:color-mix(in srgb,var(--yellow-bg) 55%,var(--glass))}
+.toast{background:var(--glass-strong)!important;color:var(--text)!important}
+.chip{box-shadow:none;color:var(--text)}
+.bitem,.otp-show{background:var(--glass-soft);border:1px solid var(--glass-border)}
+.progress{background:rgba(120,125,160,.18)}
+.field select,.field input,.otp-in input{background:var(--glass-soft);border-color:var(--border);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.dialog .field input,.dialog .otp-in input{background:rgba(255,255,255,.55)}
+[data-theme=dark] .dialog .field input,[data-theme=dark] .dialog .otp-in input,[data-theme=dark] .field select{background:rgba(255,255,255,.06)}
+.field select option{background:var(--a4);color:var(--text)}
+.opt{background:var(--glass-soft);border-color:var(--glass-border)}
+.opt:has(input:checked){background:color-mix(in srgb,var(--primary) 12%,transparent)}
+.chart{border-color:var(--border)}
+.qr-box{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+nav a.active{background:var(--glass-strong);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.icon-btn:hover,.mini:hover{background:var(--glass-strong)}
+
+/* glass buttons */
+.btn{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--glass-border);transition:background .25s,opacity .2s,transform .1s,box-shadow .25s}
+.btn.primary{background:color-mix(in srgb,var(--primary) 82%,transparent);color:#fff;border-color:color-mix(in srgb,var(--primary) 40%,white)}
+[data-theme=dark] .btn.primary{color:var(--primary-t)}
+.btn.primary:hover,.btn.primary:active{background:var(--primary);opacity:1;box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 35%,transparent)}
+.btn.tonal{background:var(--glass-soft);color:var(--text)}
+.btn.tonal:hover,.btn.tonal:active{background:var(--glass-strong)}
+.btn.outline{background:rgba(255,255,255,.22);color:var(--primary);border-color:color-mix(in srgb,var(--primary) 35%,transparent)}
+[data-theme=dark] .btn.outline{background:rgba(255,255,255,.04)}
+.btn.outline:hover,.btn.outline:active{background:var(--glass-strong)}
+.btn.warn{background:color-mix(in srgb,var(--yellow-s) 85%,transparent);border-color:rgba(255,255,255,.4)}
+.btn.warn:hover{background:var(--yellow-s)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* status badges keep solid, legible colours on glass */
+.badge.free{background:color-mix(in srgb,var(--green-bg) 85%,white 15%)}
+.badge.busy{background:color-mix(in srgb,var(--red-bg) 85%,white 15%)}
+.badge.done{background:color-mix(in srgb,var(--yellow-bg) 85%,white 15%)}
+[data-theme=dark] .badge.free,[data-theme=dark] .badge.busy,[data-theme=dark] .badge.done{background-color:rgba(0,0,0,.35)}
+[data-theme=dark] .badge.free{color:var(--green);box-shadow:inset 0 0 0 1px rgba(129,201,149,.35)}
+[data-theme=dark] .badge.busy{color:var(--red);box-shadow:inset 0 0 0 1px rgba(242,139,130,.35)}
+[data-theme=dark] .badge.done{color:var(--yellow)}
+.badge.hold{background:var(--glass-strong)}
+[data-theme=light] .badge.free,:root:not([data-theme=dark]) .badge.free{--green:#0f6b2c}
+:root:not([data-theme=dark]) .badge.busy{--red:#b3261e}
+:root:not([data-theme=dark]) .badge.done{--yellow:#8a4b00}
+
+/* logo */
+.logo svg{color:var(--primary);filter:drop-shadow(0 2px 6px color-mix(in srgb,var(--primary) 35%,transparent))}
+.logo{font-weight:700;letter-spacing:-.4px}
+
+/* fallback where backdrop-filter is unsupported: raise opacity for contrast */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{--glass:rgba(255,255,255,.9);--glass-soft:rgba(255,255,255,.75)}
+  [data-theme=dark]{--glass:rgba(24,26,40,.94);--glass-soft:rgba(40,42,60,.9)}
+}
+@media print{body::before,body::after{display:none}}
+@media (prefers-reduced-motion:reduce){body::before{animation:none}}

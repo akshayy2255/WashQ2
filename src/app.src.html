@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>WashQ — Laundry availability</title>
+<style>/*CSS*/</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="logo" href="#/"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8H16"/><path d="M12 8.2c1.6 2 2.6 3.4 2.6 4.7a2.6 2.6 0 0 1-5.2 0c0-1.3 1-2.7 2.6-4.7z" fill="currentColor" fill-opacity=".18"/></svg><span>WashQ</span></a>
+    <nav>
+      <a href="#/" data-r="home">Machines</a>
+      <a href="#/admin" data-r="admin">Analytics</a>
+    </nav>
+    <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
+  </div>
+</header>
+<div id="banners"></div>
+<main id="app"></main>
+<div id="modal"></div>
+
+<script>
+/*QRLIB*/
+</script>
+<script>
+(() => {
+'use strict';
+const KEY='washq.v2', PREF='washq.prefs', GRACE=10, CONFIRM=10, HOLD=5;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DUR=[{v:30,t:'Quick wash',d:'Lightly soiled, small loads'},{v:40,t:'Standard wash',d:'Everyday clothes, regular load'},{v:60,t:'Heavy load',d:'Bedsheets, towels, jeans, full drum'}];
+const durName=v=>(DUR.find(x=>x.v===v)||{}).t||'';
+
+// ---------- identity & prefs ----------
+let prefs=JSON.parse(localStorage.getItem(PREF)||'{}');
+if(!prefs.client)prefs.client=Math.random().toString(36).slice(2,10);
+if(prefs.demo==null)prefs.demo=false;
+const savePrefs=()=>localStorage.setItem(PREF,JSON.stringify(prefs));savePrefs();
+const ME=prefs.client;
+const MIN=()=>prefs.demo?1000:60000; // fast mode: 1 min = 1 s
+
+// ---------- theme ----------
+const sun='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const moon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+function applyTheme(){
+  const t=prefs.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  document.documentElement.dataset.theme=t;$('#themeBtn').innerHTML=t==='dark'?sun:moon;
+  document.querySelector('meta[name=theme-color]').content=t==='dark'?'#1e1f21':'#ffffff';
+}
+$('#themeBtn').onclick=()=>{prefs.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';savePrefs();applyTheme()};
+applyTheme();
+
+// ---------- state ----------
+function blank(id,name){return{id,name:name||('Machine '+id),state:'free',start:0,end:0,dur:0,user:'',owner:'',graceEnd:0,queue:[],hold:null}}
+function reset(m){Object.assign(m,{state:'free',start:0,end:0,dur:0,user:'',owner:'',graceEnd:0,hold:null})}
+function seed(){
+  const now=Date.now(),m=Array.from({length:15},(_,i)=>blank(i+1)),log=[];
+  [[2,40,28,'Aarav · B-204'],[5,60,12,'Priya · A-110'],[7,30,29,'Rohan · C-305'],[11,40,5,'Meera · A-221'],[13,60,47,'Kabir · B-118']].forEach(([id,d,el,u])=>{
+    Object.assign(m[id-1],{state:'busy',dur:d,start:now-el*60000,end:now+(d-el)*60000,user:u,owner:'demo'});log.push({t:now-el*60000,d,m:id});
+  });
+  m[4].queue=[{name:'Ishaan · D-402',client:'demo'},{name:'Neha · A-015',client:'demo'}];
+  const w=[1,0,0,0,0,0,1,3,5,4,2,2,3,2,2,3,4,6,8,9,8,6,4,2];
+  for(let d=0;d<7;d++)for(let h=0;h<24;h++){const n=Math.round(w[h]*(0.5+Math.random()*0.9));
+    for(let k=0;k<n;k++){const day=new Date(now);day.setDate(day.getDate()-d);day.setHours(h,Math.floor(Math.random()*60),0,0);
+      if(day.getTime()<now-3600000)log.push({t:day.getTime(),d:[30,40,60][k%3],m:1+Math.floor(Math.random()*15)})}}
+  // a couple of upcoming bookings by other students
+  const slot=(mins)=>{const t=new Date(now+mins*60000);t.setMinutes(Math.ceil(t.getMinutes()/15)*15,0,0);return t.getTime()};
+  const bookings=[{id:'b1',mid:3,start:slot(90),dur:40,name:'Diya · C-112',client:'demo',state:'upcoming'},
+                  {id:'b2',mid:9,start:slot(150),dur:60,name:'Arjun · B-009',client:'demo',state:'upcoming'}];
+  return{machines:m,log,bookings,nextId:16};
+}
+let S=JSON.parse(localStorage.getItem(KEY)||'null')||seed();
+S.bookings=S.bookings||[];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));save();
+window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){S=JSON.parse(e.newValue);lastKey='';render()}});
+const M=id=>S.machines.find(x=>x.id===id);
+
+// ---------- sound / notifications ----------
+let actx;
+function beep(times=3){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const t0=actx.currentTime;
+  for(let i=0;i<times;i++){const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=i%2?660:880;
+    g.gain.setValueAtTime(.0001,t0+i*.35);g.gain.exponentialRampToValueAtTime(.3,t0+i*.35+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+i*.35+.28);
+    o.connect(g).connect(actx.destination);o.start(t0+i*.35);o.stop(t0+i*.35+.3)}}catch(e){}}
+document.addEventListener('pointerdown',()=>{try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}},{once:true});
+function askPermission(){if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
+function notify(title,body){beep();toast(title+' — '+body);
+  try{if('Notification' in window&&Notification.permission==='granted'){const n=new Notification(title,{body,tag:'washq-'+title});n.onclick=()=>{window.focus();n.close()}}}catch(e){}
+  if(navigator.vibrate)navigator.vibrate([200,100,200]);}
+let toastT;
+function toast(msg){let el=$('.toast');if(el)el.remove();el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);clearTimeout(toastT);toastT=setTimeout(()=>el.remove(),4200)}
+
+// ---------- helpers ----------
+function fmt(ms){ms=Math.max(0,ms);const s=Math.ceil(ms/(prefs.demo?1000/60:1000));const h=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;return(h?h+':'+String(mm).padStart(2,'0'):mm)+':'+String(ss).padStart(2,'0')}
+const minsLeft=ms=>Math.max(1,Math.ceil(ms/MIN()));
+const tm=t=>new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+function range(b){const s=tm(b.start),e=tm(b.start+b.dur*60000);const day=new Date(b.start).toDateString()===new Date().toDateString()?'':' (tomorrow)';return s.replace(/\s?[AP]M$/i,m=>(s.slice(-2)===e.slice(-2)?'':m))+'–'+e+day}
+const activeBooking=m=>S.bookings.find(b=>b.mid===m.id&&(b.state==='pending'||b.state==='confirmed'));
+const nextBooking=m=>S.bookings.filter(b=>b.mid===m.id&&b.state==='upcoming').sort((a,b)=>a.start-b.start)[0];
+const holdValid=m=>m.hold&&m.hold.until>Date.now();
+function info(m){
+  const now=Date.now();
+  if(m.state==='busy'){const p=Math.min(100,(now-m.start)/(m.end-m.start)*100);return{cls:'busy',label:`Busy · ${minsLeft(m.end-now)} min left`,pct:p,left:m.end-now}}
+  if(m.state==='done')return{cls:'done',label:'Cycle Complete · Collect Now',pct:100,left:m.graceEnd-now};
+  const b=activeBooking(m);
+  if(b)return{cls:'hold',label:b.state==='pending'?'Reserved · Awaiting check-in':'Reserved · Unlocking',pct:0,left:b.confirmBy-now,owner:b.client,b};
+  if(holdValid(m))return{cls:'hold',label:'Reserved · Unlocking',pct:0,left:m.hold.until-now,owner:m.hold.client};
+  return{cls:'free',label:'Free',pct:0,left:0};
+}
+const isFree=m=>info(m).cls==='free';
+const inQueue=m=>m.queue.some(q=>q.client===ME);
+const qpos=m=>m.queue.findIndex(q=>q.client===ME)+1;
+// latest end allowed for a wash starting now, given other people's bookings
+function limitFor(m,exceptBid){const n=S.bookings.filter(b=>b.mid===m.id&&b.id!==exceptBid&&b.state==='upcoming'&&b.client!==ME).sort((a,b)=>a.start-b.start)[0];return n?n.start:Infinity}
+
+// ---------- engine ----------
+function freeMachine(m){
+  const q=m.queue.slice(),first=q.shift();reset(m);m.queue=q;
+  if(first&&first.client===ME)notify(`${m.name} is free`,`You were first in line${first.name?' ('+first.name+')':''}. Head over now!`);
+}
+function releaseBooking(b,reason){
+  S.bookings=S.bookings.filter(x=>x.id!==b.id);
+  const m=M(b.mid);if(!m)return;
+  if(b.client===ME&&reason==='noshow')notify(`Slot released · ${m.name}`,`You didn't check in within ${CONFIRM} minutes, so your booking was cancelled.`);
+  if(m.hold&&m.hold.bookingId===b.id)m.hold=null;
+  if(m.state==='free'){const first=m.queue.shift();if(first&&first.client===ME)notify(`${m.name} is available`,'A booked slot was released and you were first in line. Head over now!')}
+  if(openConfirm===b.id)closeModal();
+}
+function tick(){
+  const now=Date.now();let changed=false;
+  for(const m of S.machines){
+    if(m.sensor)continue; // machine 1 driven by live sensor when available
+    if(m.state==='busy'&&now>=m.end){m.state='done';m.graceEnd=m.end+GRACE*MIN();changed=true;
+      if(m.owner===ME)notify(`${m.name}: Cycle complete`,`${m.user?m.user.split('·')[0].trim()+', your':'Your'} laundry is ready. Please collect it within ${GRACE} minutes.`)}
+    if(m.state==='done'&&now>=m.graceEnd){freeMachine(m);changed=true}
+  }
+  for(const m of S.machines)if(m.hold&&m.hold.until<=now&&!m.hold.bookingId){m.hold=null;changed=true;if(otpFor===m.id)closeModal(),toast('Reservation expired — code not entered in time')}
+  for(const b of S.bookings.slice()){
+    if(!M(b.mid)){S.bookings=S.bookings.filter(x=>x!==b);changed=true;continue}
+    if(b.state==='upcoming'&&now>=b.start){b.state='pending';b.confirmBy=b.start+CONFIRM*MIN();changed=true;
+      if(b.client===ME){notify(`Your slot on ${M(b.mid).name} has started`,`Confirm within ${CONFIRM} minutes or your slot will be released.`);confirmDialog(b.id)}}
+    else if((b.state==='pending'||b.state==='confirmed')&&now>=b.confirmBy){releaseBooking(b,'noshow');changed=true}
+  }
+  if(changed){save();lastKey=''}
+  render(true);tickModal();
+}
+
+// ---------- live sensor (Machine 1) ----------
+// Polls sensor/machine1.json → {"state":"busy","remaining_min":23,"total_min":40} or {"state":"free"}.
+// If the file/endpoint isn't reachable, Machine 1 silently falls back to simulation.
+async function pollSensor(){
+  const m=M(1);if(!m)return;
+  try{
+    const r=await fetch('sensor/machine1.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;
+    const d=await r.json(),now=Date.now();
+    if(!m.sensor){m.sensor=true;lastKey=''}
+    if(d.state==='busy'){const tot=(d.total_min||m.dur||40)*MIN(),end=now+(d.remaining_min||0)*MIN();
+      if(m.state!=='busy')Object.assign(m,{state:'busy',dur:d.total_min||40,start:end-tot,user:m.user||'Sensor detected',owner:m.owner||''});
+      m.end=end;}
+    else if(d.state==='free'&&m.state==='busy'){m.state='done';m.graceEnd=now+GRACE*MIN();if(m.owner===ME)notify(`${m.name}: Cycle complete`,'Sensor reports your wash is finished.')}
+    else if(d.state==='free'&&m.state==='done'&&now>=m.graceEnd)freeMachine(m);
+    save();
+  }catch(e){if(m.sensor){m.sensor=false;save();lastKey=''}}
+}
+
+// ---------- routing ----------
+let route='home',param=null,lastKey='';
+function parseRoute(){
+  const pm=location.pathname.match(/\/machine\/(\d+)\/?$/);
+  if(pm&&!location.hash){location.replace(location.pathname.replace(/\/machine\/\d+\/?$/,'/')+'#/machine/'+pm[1]);return}
+  const h=location.hash.replace(/^#/,'')||'/';let mm;
+  if((mm=h.match(/^\/machine\/(\d+)/))){route='machine';param=+mm[1]}
+  else if(h.startsWith('/setup'))route='setup';
+  else if(h.startsWith('/admin'))route='admin';
+  else route='home';
+  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.dataset.r===route||(route==='machine'&&a.dataset.r==='home')));
+  $('#gear').style.color=route==='setup'?'var(--primary)':'';
+  lastKey='';render();window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',parseRoute);
+
+// ---------- UI pieces ----------
+const ic={
+  bell:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  cal:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  x:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  lock:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  people:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg>'
+};
+function queueBtn(m){return inQueue(m)?`<button class="btn tonal" data-act="unqueue" data-id="${m.id}">✓ #${qpos(m)} in line · Leave</button>`
+  :`<button class="btn outline" data-act="queue" data-id="${m.id}">${ic.bell}Notify me when free</button>`}
+function actionsFor(m){
+  const i=info(m);
+  if(i.cls==='free')return`<button class="btn primary" data-act="reserve" data-id="${m.id}">${ic.lock}Reserve &amp; Start</button>`;
+  if(i.cls==='hold'){
+    if(i.owner===ME){
+      if(i.b&&i.b.state==='pending')return`<button class="btn primary" data-act="checkin" data-id="${m.id}">Yes, I'm here</button>`;
+      return`<button class="btn primary" data-act="resume" data-id="${m.id}">${ic.lock}Enter unlock code</button>`;
+    }
+    return queueBtn(m);
+  }
+  if(m.state==='busy')return queueBtn(m)+(m.owner===ME?`<button class="btn tonal small" title="Cancel wash" data-act="cancel" data-id="${m.id}">${ic.x}</button>`:'');
+  return m.owner===ME?`<button class="btn warn" data-act="collect" data-id="${m.id}">I've collected it</button>`:queueBtn(m);
+}
+function tagsFor(m){
+  const t=[];
+  if(m.sensor)t.push('<span class="tag sensor"><span class="dot"></span>Live sensor</span>');
+  const nb=nextBooking(m);if(nb)t.push(`<span class="tag">${ic.cal.replace(/17/g,'12')}Booked: ${range(nb)}${nb.client===ME?' · you':''}</span>`);
+  if(m.queue.length)t.push(`<span class="tag">${ic.people}${m.queue.length} ${m.queue.length===1?'person':'people'} waiting</span>`);
+  return t.length?`<div class="tags">${t.join('')}</div>`:'';
+}
+function metaFor(m,i){
+  if(i.cls==='free')return'Ready to use';
+  if(i.cls==='hold')return i.owner===ME?'Reserved for you':'Reserved';
+  return m.owner===ME?'Your wash':esc(m.user||'In use');
+}
+function plabel(m,i){
+  if(i.cls==='free')return'<span>Available now</span><span></span>';
+  if(i.cls==='hold')return`<span>${i.b&&i.b.state==='pending'?'Check-in closes in':'Reservation ends in'}</span><span>${fmt(i.left)}</span>`;
+  if(i.cls==='busy')return`<span>${Math.floor(i.pct)}% complete</span><span>${fmt(i.left)}</span>`;
+  return`<span>Auto-frees in</span><span>${fmt(i.left)}</span>`;
+}
+function card(m){
+  const i=info(m);
+  return`<div class="card ${(m.owner===ME&&m.state!=='free')||i.owner===ME?'mine':''}" data-card="${m.id}">
+    <div class="card-top"><a href="#/machine/${m.id}" style="min-width:0"><div class="mname">${esc(m.name)}</div><div class="mmeta">${metaFor(m,i)}</div></a>
+      <span class="badge ${i.cls}"><span class="dot"></span><span data-badge>${i.label}</span></span></div>
+    <div><div class="progress ${i.cls}"><i style="width:${i.pct}%"></i></div><div class="plabel">${plabel(m,i)}</div></div>
+    ${tagsFor(m)}
+    <div class="actions">${actionsFor(m)}<button class="mini" title="Book a time slot" data-act="book" data-id="${m.id}" style="align-self:center">${ic.cal}</button></div>
+  </div>`;
+}
+const structKey=m=>{const i=info(m),nb=nextBooking(m);return[m.id,m.name,m.state,i.cls,i.label,i.owner,m.owner===ME,inQueue(m),qpos(m),m.queue.length,m.user,m.sensor,nb&&nb.id].join('|')};
+
+// ---------- views ----------
+function viewHome(soft){
+  const list=S.machines.filter(m=>!prefs.onlyFree||isFree(m));
+  const key='home'+prefs.onlyFree+list.map(structKey).join(';');
+  if(soft&&key===lastKey){patch(list);return}lastKey=key;
+  const c={free:0,busy:0,done:0,hold:0};S.machines.forEach(m=>c[info(m).cls]++);
+  $('#app').innerHTML=`
+    <h1>Washing machines</h1><div class="sub">Live availability · updates every second</div>
+    <div class="toolbar">
+      <div class="stats">
+        <span class="chip"><span class="dot" style="background:var(--green)"></span>${c.free} free</span>
+        <span class="chip"><span class="dot" style="background:var(--red)"></span>${c.busy} busy</span>
+        <span class="chip"><span class="dot" style="background:var(--yellow-s)"></span>${c.done} ready to collect</span>
+        ${c.hold?`<span class="chip"><span class="dot" style="background:var(--primary)"></span>${c.hold} reserved</span>`:''}
+      </div>
+      <label class="switch"><input type="checkbox" id="onlyFree" ${prefs.onlyFree?'checked':''}><span class="track"></span>Show only free machines</label>
+    </div>
+    ${list.length?`<div class="grid">${list.map(card).join('')}</div>`:`<div class="empty">${S.machines.length?'No free machines right now.<br>Tap “Notify me when free” on a busy machine to join the queue.':'No machines yet. Add one from <a href="#/setup">Machine setup</a>.'}</div>`}
+    ${myBookingsSection()}`;
+  $('#onlyFree').onchange=e=>{prefs.onlyFree=e.target.checked;savePrefs();lastKey='';render()};
+}
+function myBookingsSection(){
+  const mine=S.bookings.filter(b=>b.client===ME).sort((a,b)=>a.start-b.start);
+  if(!mine.length)return'';
+  return`<details class="sect" ${prefs.bOpen?'open':''} ontoggle="window.__bt(this.open)"><summary>My bookings (${mine.length})</summary><div class="inner"><div class="blist">${mine.map(b=>`<div class="bitem"><div><b>${esc(M(b.mid).name)}</b> · ${range(b)}<br><small>${durName(b.dur)} · ${b.state==='upcoming'?'Upcoming':b.state==='pending'?'Check in now':'Checked in'}</small></div><button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button></div>`).join('')}</div></div></details>`;
+}
+window.__bt=o=>{prefs.bOpen=o;savePrefs()};
+function patch(list){
+  for(const m of list){const el=document.querySelector(`[data-card="${m.id}"]`);if(!el)continue;const i=info(m);
+    el.querySelector('.progress>i').style.width=i.pct+'%';el.querySelector('.plabel').innerHTML=plabel(m,i);}
+}
+
+function viewMachine(soft){
+  const m=M(param);
+  if(!m){$('#app').innerHTML='<div class="empty">Machine not found. <a href="#/">Back to all machines</a></div>';return}
+  const i=info(m),bk=S.bookings.filter(b=>b.mid===m.id).sort((a,b)=>a.start-b.start);
+  const key='m'+structKey(m)+bk.map(b=>b.id+b.state).join();
+  const big=i.cls==='free'?'Free':fmt(i.left);
+  if(soft&&key===lastKey){$('#bigTime').textContent=big;$('[data-badge]').textContent=i.label;$('.progress>i').style.width=i.pct+'%';$('#pct').innerHTML=plabel(m,i);return}
+  lastKey=key;
+  const sub=i.cls==='busy'?`Started ${tm(m.start)} · ${durName(m.dur)||m.dur+' min'} (${m.dur} min)${m.user?' · '+esc(m.user):''}`
+    :i.cls==='done'?'Until auto-release · please collect laundry so the next person can use it'
+    :i.cls==='hold'?(i.owner===ME?'Reserved for you — confirm with the unlock code':'Someone is unlocking this machine')
+    :'Available right now — reserve it and confirm with a one-time code';
+  $('#app').innerHTML=`
+    <a class="back" href="#/"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>All machines</a>
+    <h1>${esc(m.name)}</h1>
+    <div class="detail">
+      <div class="panel">
+        <span class="badge ${i.cls}"><span class="dot"></span><span data-badge>${i.label}</span></span>
+        <div class="big-time" id="bigTime">${big}</div>
+        <div class="sub" style="margin-bottom:20px">${sub}</div>
+        <div class="progress ${i.cls}"><i style="width:${i.pct}%"></i></div>
+        <div class="plabel" id="pct">${plabel(m,i)}</div>
+        <div style="margin:18px 0">${tagsFor(m)}</div>
+        <div class="actions">${actionsFor(m)}</div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:600">Bookings</div><button class="btn tonal" style="flex:0 0 auto;height:36px" data-act="book" data-id="${m.id}">${ic.cal}Book a slot</button></div>
+        ${bk.length?`<div class="blist">${bk.map(b=>`<div class="bitem"><div>${range(b)}<br><small>${durName(b.dur)} · ${b.client===ME?'You':esc(b.name||'Student')}</small></div>${b.client===ME?`<button class="link danger" data-act="unbook" data-bid="${b.id}">Cancel</button>`:''}</div>`).join('')}</div>`
+          :'<div class="sub" style="font-size:14px">No upcoming bookings. Book ahead to skip the queue — you’ll get 10 minutes to check in when your slot starts.</div>'}
+      </div>
+    </div>`;
+}
+
+function machineURL(id){return location.origin+location.pathname.replace(/\/machine\/\d+\/?$/,'/')+'#/machine/'+id}
+function qrObj(t){const q=qrcode(0,'M');q.addData(t);q.make();return q}
+const qrSVG=t=>qrObj(t).createSvgTag({cellSize:4,margin:0,scalable:true});
+function downloadQR(m){
+  const q=qrObj(machineURL(m.id)),n=q.getModuleCount(),cell=12,pad=48,size=n*cell,W=size+pad*2,H=W+80;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#000';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))x.fillRect(pad+k*cell,pad+r*cell,cell,cell);
+  x.textAlign='center';x.font='600 30px Inter,Segoe UI,Roboto,sans-serif';x.fillText('WashQ · '+m.name,W/2,W+18);
+  x.font='18px Inter,Segoe UI,Roboto,sans-serif';x.fillStyle='#5f6368';x.fillText('Scan for live status & to reserve',W/2,W+50);
+  const a=document.createElement('a');a.download=`washq-${m.name.replace(/\W+/g,'-').toLowerCase()}-qr.png`;a.href=c.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();
+}
+let justMade=null;
+function viewSetup(soft){
+  const key='setup'+justMade+S.machines.map(m=>m.id+m.name).join();
+  if(soft&&key===lastKey)return;lastKey=key;
+  const nm=M(justMade);
+  $('#app').innerHTML=`
+    <h1>Machine setup</h1><div class="sub">Admin · add machines and generate their QR codes</div>
+    <div class="panel" style="margin-top:24px">
+      <form class="setup-form" id="addF">
+        <div class="field"><label>Machine name / number</label><input id="mn" maxlength="30" placeholder="e.g. Machine ${S.nextId} or Block B – Washer 2" required></div>
+        <button class="btn primary" style="flex:0 0 auto;height:46px">Generate QR code</button>
+      </form>
+      ${nm?`<div class="newqr"><div class="qr-box">${qrSVG(machineURL(nm.id))}</div><div style="flex:1;min-width:200px"><div class="sub" style="font-size:13px">New machine added</div><div style="font-size:22px;font-weight:600;margin:4px 0 6px">${esc(nm.name)}</div><div class="url" style="margin:0 0 16px">${esc(machineURL(nm.id))}</div><div class="row"><button class="btn primary" style="flex:0 0 auto" data-act="dl" data-id="${nm.id}">Download QR</button><a class="btn tonal" style="flex:0 0 auto" href="#/machine/${nm.id}">Open machine</a></div></div></div>`:''}
+    </div>
+    <details class="sect" open><summary>All machines (${S.machines.length})</summary><div class="inner">
+      ${S.machines.length?`<div class="mlist">${S.machines.map(m=>`<div class="mrow"><div class="qr-box">${qrSVG(machineURL(m.id))}</div><div class="grow"><div>${esc(m.name)}</div><small>/machine/${m.id}</small></div><div class="acts"><button class="link" data-act="dl" data-id="${m.id}">Download</button><button class="link danger" data-act="del" data-id="${m.id}">Delete machine</button></div></div>`).join('')}</div>`:'<div class="sub">No machines yet.</div>'}
+    </div></details>`;
+  $('#addF').onsubmit=e=>{e.preventDefault();const name=$('#mn').value.trim();if(!name)return;
+    if(S.machines.some(m=>m.name.toLowerCase()===name.toLowerCase())){toast('A machine with that name already exists');return}
+    const id=S.nextId++;S.machines.push(blank(id,name));save();justMade=id;lastKey='';render();toast(`${name} added`)};
+}
+
+function viewAdmin(soft){
+  const key='admin'+S.log.length+prefs.demo+S.machines.length;
+  if(soft&&key===lastKey)return;lastKey=key;
+  const sod=new Date();sod.setHours(0,0,0,0);const sow=new Date(sod);sow.setDate(sow.getDate()-6);
+  const today=S.log.filter(l=>l.t>=sod.getTime()).length,week=S.log.filter(l=>l.t>=sow.getTime()).length;
+  const hours=Array(24).fill(0);S.log.filter(l=>l.t>=sow.getTime()).forEach(l=>hours[new Date(l.t).getHours()]++);
+  const max=Math.max(1,...hours),peak=hours.indexOf(max),avg=(week/7).toFixed(1);
+  const hl=h=>h===0?'12a':h<12?h+'a':h===12?'12p':(h-12)+'p';
+  const busyNow=S.machines.filter(m=>m.state!=='free').length;
+  const byH=hours.map((v,h)=>({v,h}));
+  const top=byH.slice().sort((a,b)=>b.v-a.v).slice(0,3).map(x=>hl(x.h)).join(', ');
+  const quiet=byH.filter(x=>x.h>=7&&x.h<=23).sort((a,b)=>a.v-b.v).slice(0,3).map(x=>hl(x.h)).join(', ');
+  $('#app').innerHTML=`
+    <h1>Usage analytics</h1><div class="sub">Admin view · last 7 days</div>
+    <div class="kpis">
+      <div class="panel kpi"><div class="k">Washes today</div><div class="v">${today}</div></div>
+      <div class="panel kpi"><div class="k">Washes this week</div><div class="v">${week}</div></div>
+      <div class="panel kpi"><div class="k">Avg per day</div><div class="v">${avg}</div></div>
+      <div class="panel kpi"><div class="k">In use right now</div><div class="v">${busyNow}<span style="font-size:18px;color:var(--muted)"> / ${S.machines.length}</span></div></div>
+    </div>
+    <div class="panel">
+      <div style="font-weight:600">Usage by hour of day</div><div class="sub" style="font-size:13px">Wash starts per hour, summed over the last 7 days</div>
+      <div class="chart">${hours.map((v,h)=>`<div class="col"><span class="tip">${v}</span><div class="b ${h===peak?'peak':''}" style="height:0" data-h="${v/max*100}"></div></div>`).join('')}</div>
+      <div class="xl">${hours.map((_,h)=>`<span>${h%3===0?hl(h):''}</span>`).join('')}</div>
+      <div class="legend"><span><span class="dot" style="background:var(--red)"></span>Peak hour (${hl(peak)})</span><span><span class="dot" style="background:var(--primary)"></span>Other hours</span></div>
+    </div>
+    <div class="kpis">
+      <div class="panel"><div style="font-weight:600;margin-bottom:6px">Bottleneck insight</div><div class="sub" style="font-size:14px">Busiest hours: <b style="color:var(--text)">${top}</b>. Quietest daytime hours: <b style="color:var(--text)">${quiet}</b>. Encourage students to book slots in quieter hours before adding machines.</div></div>
+      <div class="panel settings">
+        <div style="font-weight:600">Demo controls</div>
+        <label class="switch"><input type="checkbox" id="demo" ${prefs.demo?'checked':''}><span class="track"></span>Fast mode (1 min = 1 sec) for testing</label>
+        <div class="row"><button class="btn tonal" id="testN">Test notification</button><button class="btn tonal" id="reset">Reset demo data</button></div>
+      </div>
+    </div>`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('.chart .b').forEach(b=>b.style.height=b.dataset.h+'%')));
+  $('#demo').onchange=e=>{const old=MIN();prefs.demo=e.target.checked;savePrefs();const nw=MIN(),now=Date.now(),sc=t=>now+(t-now)/old*nw;
+    S.machines.forEach(m=>{if(m.state==='busy'){m.start=sc(m.start);m.end=sc(m.end)}if(m.state==='done')m.graceEnd=sc(m.graceEnd);if(m.hold)m.hold.until=sc(m.hold.until)});
+    S.bookings.forEach(b=>{if(b.confirmBy)b.confirmBy=sc(b.confirmBy)});
+    save();lastKey='';toast(prefs.demo?'Fast mode on — timers run 60× faster':'Fast mode off')};
+  $('#testN').onclick=()=>{askPermission();setTimeout(()=>notify('WashQ test','Notifications and sound are working.'),300)};
+  $('#reset').onclick=()=>{if(confirm('Reset machines, bookings, queues and analytics to demo data?')){S=seed();save();lastKey='';render();toast('Demo data reset')}};
+}
+
+function banners(){
+  const now=Date.now(),items=[];
+  S.machines.filter(m=>m.state==='done'&&m.owner===ME).forEach(m=>items.push({k:'c'+m.id,h:`<div style="flex:1"><b>Please collect your laundry</b> from ${esc(m.name)} · auto-release in <span data-t>${fmt(m.graceEnd-now)}</span></div><button class="btn warn" data-act="collect" data-id="${m.id}">Collected</button>`,t:m.graceEnd}));
+  S.bookings.filter(b=>b.client===ME&&b.state==='pending').forEach(b=>items.push({k:'b'+b.id,h:`<div style="flex:1"><b>Your slot on ${esc(M(b.mid).name)} has started.</b> Check in within <span data-t>${fmt(b.confirmBy-now)}</span></div><button class="btn warn" data-act="checkin" data-id="${b.mid}">I'm here</button>`,t:b.confirmBy}));
+  const warn='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+  const b=$('#banners'),k=items.map(x=>x.k).join();
+  if(b.dataset.k!==k){b.innerHTML=items.map(x=>`<div class="banner">${warn}${x.h}</div>`).join('');b.dataset.k=k}
+  else b.querySelectorAll('[data-t]').forEach((s,ix)=>s.textContent=fmt(items[ix].t-now));
+}
+function setMood(){
+  const n=S.machines.length||1,free=S.machines.filter(isFree).length,busy=n-free;
+  const mood=S.machines.length&&free/n>=.6?'free':(S.machines.length&&busy/n>=.6?'busy':'mixed');
+  if(document.documentElement.dataset.mood!==mood)document.documentElement.dataset.mood=mood;
+}
+function render(soft){setMood();({home:viewHome,machine:viewMachine,setup:viewSetup,admin:viewAdmin})[route](soft);banners()}
+
+// ---------- modals ----------
+let otpFor=null,openConfirm=null,modalTick=null;
+function closeModal(){$('#modal').innerHTML='';otpFor=null;openConfirm=null;modalTick=null}
+function tickModal(){if(modalTick)modalTick()}
+function showModal(html){$('#modal').innerHTML=`<div class="scrim" id="scrim"><div class="dialog">${html}</div></div>`;$('#scrim').onclick=e=>{if(e.target.id==='scrim')closeModal()}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+function durOpts(limitMs,sel=40){
+  const now=Date.now();
+  let first=null;
+  const html=DUR.map(o=>{const dis=now+o.v*MIN()>limitMs;if(!dis&&(first===null||o.v===sel))first=o.v;return{o,dis}})
+    .map(({o,dis})=>`<label class="opt"><input type="radio" name="dur" value="${o.v}" ${dis?'disabled':''} ${o.v===first?'checked':''}><div><b>${o.t}</b><small>${dis?'Not available — machine booked soon':o.d}</small></div><span class="mins">${o.v} min</span></label>`).join('');
+  return{html,any:first!==null};
+}
+const who=()=>[prefs.name,prefs.room].filter(Boolean).join(' · ');
+const nameFields=()=>`<div class="row"><div class="field" style="flex:1.4"><label>Name (optional)</label><input id="nm" maxlength="24" placeholder="e.g. Aarav" value="${esc(prefs.name||'')}"></div><div class="field" style="flex:1"><label>Room</label><input id="rm" maxlength="8" placeholder="B-204" value="${esc(prefs.room||'')}"></div></div>`;
+const readName=()=>{prefs.name=$('#nm').value.trim();prefs.room=$('#rm').value.trim();savePrefs()};
+
+// Step 1: choose cycle → Step 2: OTP
+function reserveDialog(id){
+  const m=M(id);if(!isFree(m)){toast('This machine is no longer free');return}
+  const d=durOpts(limitFor(m));
+  showModal(`<form id="f"><h2>Reserve ${esc(m.name)}</h2><p>Pick a cycle. You’ll get a one-time code to confirm you’re at the machine.</p>
+    <div class="field"><label>Wash type</label><div class="opts">${d.html}</div></div>
+    ${nameFields()}
+    <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary" ${d.any?'':'disabled'}>Reserve &amp; get code</button></div></form>`);
+  $('[data-close]').onclick=closeModal;
+  $('#f').onsubmit=e=>{e.preventDefault();askPermission();readName();
+    if(!isFree(m)){closeModal();toast('Someone just reserved this machine');return}
+    const dur=+document.querySelector('input[name=dur]:checked').value;
+    m.hold={client:ME,until:Date.now()+HOLD*MIN(),dur,user:who(),code:newCode(),tries:0};save();lastKey='';render();otpDialog(id)};
+}
+const newCode=()=>String(Math.floor(1000+Math.random()*9000));
+function otpDialog(id){
+  const m=M(id),h=m.hold;if(!h||h.client!==ME){toast('Reservation not found');return}
+  otpFor=id;
+  showModal(`<h2>Unlock ${esc(m.name)}</h2><p style="margin-bottom:12px">${durName(h.dur)} · ${h.dur} min${h.bookingId?' · booked slot':''}</p>
+    <div class="otp-show" id="code">${h.code}</div>
+    <div class="otp-hint">Enter this code at the machine to confirm and start your wash</div>
+    <div class="otp-in" id="boxes">${[0,1,2,3].map(i=>`<input inputmode="numeric" maxlength="1" aria-label="Digit ${i+1}" autocomplete="one-time-code">`).join('')}</div>
+    <div class="msg" id="msg"></div>
+    <div class="sub" style="text-align:center;font-size:12px;margin-bottom:10px">Reservation held for <span id="hl">${fmt(h.until-Date.now())}</span></div>
+    <div class="actions"><button class="btn tonal" data-act="release" data-id="${id}">Release</button><button class="btn tonal" id="regen" style="display:none">Generate new code</button><button class="btn primary" id="ok">Confirm &amp; start</button></div>
+    <div class="sub" style="font-size:11.5px;text-align:center;margin-top:14px">In the hardware version this code is typed on the keypad mounted on the machine.</div>`);
+  const boxes=[...document.querySelectorAll('#boxes input')];
+  boxes.forEach((b,i)=>{
+    b.oninput=()=>{b.value=b.value.replace(/\D/g,'').slice(-1);if(b.value&&i<3)boxes[i+1].focus();if(boxes.every(x=>x.value))verify()};
+    b.onkeydown=e=>{if(e.key==='Backspace'&&!b.value&&i>0)boxes[i-1].focus();if(e.key==='Enter')verify()};
+    b.onpaste=e=>{const t=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,4);if(t){e.preventDefault();t.split('').forEach((c,j)=>boxes[j].value=c);(boxes[t.length]||boxes[3]).focus();if(t.length===4)verify()}};
+  });
+  setTimeout(()=>boxes[0].focus(),60);
+  const msg=$('#msg');
+  const lock=on=>{boxes.forEach(b=>b.disabled=on);$('#ok').style.display=on?'none':'';$('#regen').style.display=on?'':'none'};
+  if(h.tries>=2){msg.className='msg err';msg.textContent='Too many incorrect attempts. Generate a new code to try again.';lock(true)}
+  function verify(){
+    const v=boxes.map(b=>b.value).join('');if(v.length<4){msg.className='msg err';msg.textContent='Enter all 4 digits';return}
+    if(v===h.code){startWash(m,h.dur,h.user,h.bookingId);closeModal();toast(`${m.name} unlocked · ${h.dur} min ${durName(h.dur).toLowerCase()} started`);return}
+    h.tries++;save();
+    const bx=$('#boxes');bx.classList.remove('err');void bx.offsetWidth;bx.classList.add('err');
+    boxes.forEach(b=>b.value='');
+    if(h.tries>=2){msg.className='msg err';msg.textContent='Incorrect code entered twice. Please generate a new code and try again.';lock(true)}
+    else{msg.className='msg err';msg.textContent='Incorrect code — 1 attempt left';boxes[0].focus()}
+  }
+  $('#ok').onclick=verify;
+  $('#regen').onclick=()=>{h.code=newCode();h.tries=0;save();$('#code').textContent=h.code;$('#code').style.animation='none';void $('#code').offsetWidth;$('#code').style.animation='';msg.className='msg';msg.textContent='New code generated';lock(false);boxes[0].focus()};
+  modalTick=()=>{const hh=M(id)&&M(id).hold;const el=$('#hl');if(hh&&el)el.textContent=fmt(hh.until-Date.now())};
+}
+function startWash(m,dur,user,bid){
+  if(m.state!=='free'){toast('Machine is still in use');return}
+  const now=Date.now();Object.assign(m,{state:'busy',dur,start:now,end:now+dur*MIN(),user:user||'',owner:ME,hold:null});
+  if(bid)S.bookings=S.bookings.filter(b=>b.id!==bid);
+  S.log.push({t:now,d:dur,m:m.id});save();lastKey='';render();
+}
+
+function bookDialog(id){
+  const m=M(id);
+  const d=new Date(Date.now()+30*60000);d.setMinutes(Math.ceil(d.getMinutes()/15)*15,0,0);
+  const hhmm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  showModal(`<form id="f"><h2>Book ${esc(m.name)}</h2><p>You’ll get ${CONFIRM} minutes to check in when your slot starts, or it’s released to the next person.</p>
+    <div class="field"><label>Start time</label><input type="time" id="st" value="${hhmm}" required></div>
+    <div class="field"><label>Wash type</label><div class="opts">${DUR.map(o=>`<label class="opt"><input type="radio" name="dur" value="${o.v}" ${o.v===40?'checked':''}><div><b>${o.t}</b><small>${o.d}</small></div><span class="mins">${o.v} min</span></label>`).join('')}</div></div>
+    ${nameFields()}
+    <div class="msg err" id="msg"></div>
+    <div class="actions"><button type="button" class="link" id="quick" style="margin-right:auto">Test: slot in 1 min</button><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary">Book slot</button></div></form>`);
+  $('[data-close]').onclick=closeModal;
+  const submit=(startMs)=>{
+    const dur=+document.querySelector('input[name=dur]:checked').value,end=startMs+dur*60000;
+    const clash=S.bookings.find(b=>b.mid===id&&startMs<b.start+b.dur*60000&&b.start<end);
+    if(clash){$('#msg').textContent=`Overlaps an existing booking (${range(clash)}). Pick another time.`;return}
+    if(S.bookings.some(b=>b.client===ME&&b.state==='upcoming'&&b.mid===id&&Math.abs(b.start-startMs)<3600000)){$('#msg').textContent='You already have a booking near this time on this machine.';return}
+    readName();askPermission();
+    const b={id:'b'+Date.now().toString(36),mid:id,start:startMs,dur,name:who(),client:ME,state:'upcoming'};
+    S.bookings.push(b);save();closeModal();lastKey='';render();toast(`Booked ${m.name} · ${range(b)}`);
+  };
+  $('#f').onsubmit=e=>{e.preventDefault();const [h,mi]=$('#st').value.split(':').map(Number);const t=new Date();t.setHours(h,mi,0,0);if(t.getTime()<=Date.now())t.setDate(t.getDate()+1);submit(t.getTime())};
+  $('#quick').onclick=()=>submit(Date.now()+60000);
+}
+
+function confirmDialog(bid){
+  const b=S.bookings.find(x=>x.id===bid);if(!b)return;const m=M(b.mid);
+  if(b.state==='confirmed'){openOtpForBooking(b);return}
+  openConfirm=bid;
+  showModal(`<h2>Are you going to use ${esc(m.name)} now?</h2>
+    <p>Your booked slot (${range(b)}) has started. Confirm within ${CONFIRM} minutes or your slot will be released.</p>
+    <div class="countdown" id="cd">${fmt(b.confirmBy-Date.now())}</div>
+    <div class="ring-bar"><i id="cdb" style="width:100%"></i></div>
+    <div class="actions"><button class="btn tonal" data-act="unbook" data-bid="${b.id}">Release slot</button><button class="btn tonal" id="later">Later</button><button class="btn primary" id="yes">Yes, I'm here</button></div>`);
+  const upd=()=>{const bb=S.bookings.find(x=>x.id===bid);if(!bb)return;const left=bb.confirmBy-Date.now();$('#cd')&&($('#cd').textContent=fmt(left));$('#cdb')&&($('#cdb').style.width=Math.max(0,left/(CONFIRM*MIN())*100)+'%')};
+  upd();modalTick=upd;
+  $('#later').onclick=closeModal;
+  $('#yes').onclick=()=>{
+    if(M(b.mid).state!=='free'){toast(`${m.name} is still finishing a cycle — try again in a moment`);return}
+    b.state='confirmed';b.confirmBy=Date.now()+CONFIRM*MIN();openOtpForBooking(b);
+  };
+}
+function openOtpForBooking(b){
+  const m=M(b.mid);
+  if(!m.hold||m.hold.bookingId!==b.id)m.hold={client:ME,until:b.confirmBy,dur:b.dur,user:b.name,code:newCode(),tries:0,bookingId:b.id};
+  save();lastKey='';render();otpDialog(m.id);
+}
+
+// ---------- actions ----------
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const id=+el.dataset.id,m=M(id);
+  switch(el.dataset.act){
+    case'reserve':reserveDialog(id);break;
+    case'resume':otpDialog(id);break;
+    case'checkin':{const b=activeBooking(m);if(b&&b.client===ME)confirmDialog(b.id);break}
+    case'release':if(m.hold){const bid=m.hold.bookingId;m.hold=null;if(bid){const b=S.bookings.find(x=>x.id===bid);if(b)releaseBooking(b,'user')}save();closeModal();lastKey='';render();toast('Reservation released')}break;
+    case'book':bookDialog(id);break;
+    case'unbook':{const b=S.bookings.find(x=>x.id===el.dataset.bid);if(b&&confirm('Cancel this booking?')){releaseBooking(b,'user');save();closeModal();lastKey='';render();toast('Booking cancelled')}break}
+    case'queue':showModal(`<form id="f"><h2>Notify me · ${esc(m.name)}</h2><p>You’ll get an alert when it’s free. First in line is notified first.</p><div class="field"><label>Name / room (optional)</label><input id="qn" maxlength="30" value="${esc(who())}" placeholder="e.g. Aarav · B-204"></div><div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary">Join queue</button></div></form>`);
+      $('[data-close]').onclick=closeModal;
+      $('#f').onsubmit=ev=>{ev.preventDefault();askPermission();if(!inQueue(m))m.queue.push({name:$('#qn').value.trim(),client:ME,t:Date.now()});save();closeModal();lastKey='';render();toast(`You’re #${qpos(m)} in line for ${m.name}`)};break;
+    case'unqueue':m.queue=m.queue.filter(q=>q.client!==ME);save();lastKey='';render();toast('Left the queue');break;
+    case'cancel':if(confirm(`Cancel your wash on ${m.name}?`)){S.log=S.log.filter(l=>!(l.m===id&&l.t===m.start));freeMachine(m);save();lastKey='';render()}break;
+    case'collect':freeMachine(m);save();lastKey='';render();toast(`Thanks! ${m.name} is now free`);break;
+    case'dl':downloadQR(m);break;
+    case'del':if(confirm(`Delete ${m.name}? Its QR code will stop working and any bookings are cancelled.`)){S.machines=S.machines.filter(x=>x.id!==id);S.bookings=S.bookings.filter(b=>b.mid!==id);if(justMade===id)justMade=null;save();lastKey='';render();toast(`${m.name} deleted`)}break;
+  }
+});
+
+parseRoute();
+setInterval(tick,1000);
+pollSensor();setInterval(pollSensor,5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
+// reopen my pending check-in popup on load
+setTimeout(()=>{const b=S.bookings.find(x=>x.client===ME&&x.state==='pending');if(b&&!$('#scrim'))confirmDialog(b.id)},400);
+})();
+</script>
+</body>
+</html>
