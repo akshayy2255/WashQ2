@@ -20,12 +20,13 @@
       <a href="#/admin" data-r="admin"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analytics</span></a>
     </nav>
     <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
-    <button class="icon-btn" id="acctBtn" aria-label="Account" title="Account" style="display:none"></button>
     <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
+    <button class="icon-btn acct-btn" id="acctBtn" aria-label="Sign in" title="Sign in" aria-haspopup="dialog"></button>
   </div>
 </header>
 <div class="block-scrim" id="blockScrim" hidden></div>
 <div id="banners"></div>
+<button class="scan-fab" id="scanFab" data-act="quickscan" aria-label="Scan machine QR"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg></button>
 <main id="app"></main>
 <div id="modal"></div>
 
@@ -278,6 +279,11 @@ function viewHome(soft){
   const c={free:0,busy:0,done:0,hold:0};S.machines.forEach(m=>c[info(m).cls]++);
   $('#app').innerHTML=`
     <h1>Washing machines</h1><div class="sub">Live availability · updates every second</div>
+    <button class="scan-tile" data-act="quickscan" aria-label="Scan machine QR code to start">
+      <span class="st-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg></span>
+      <span class="st-t"><b>Scan QR</b><small>Scan the sticker on any machine to start a wash or check its status</small></span>
+      <span class="st-go"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+    </button>
     <div class="toolbar">
       <div class="stats">
         <span class="chip"><span class="dot" style="background:var(--green)"></span>${c.free} free</span>
@@ -492,7 +498,7 @@ function readDur(limitMs){
   return v;
 }
 const who=()=>[prefs.name,prefs.room].filter(Boolean).join(' · ');
-const nameFields=()=>`<div class="row"><div class="field" style="flex:1.4"><label>Name (optional)</label><input id="nm" maxlength="24" placeholder="e.g. Aarav" value="${esc(prefs.name||'')}"></div><div class="field" style="flex:1"><label>Room</label><input id="rm" maxlength="8" placeholder="B-204" value="${esc(prefs.room||'')}"></div></div>`;
+const nameFields=()=>signedIn()?`<div class="as-user"><span class="avatar">${esc(initials(prefs.user))}</span><span><b>${esc(prefs.user.name||'You')}</b> · Room ${esc(prefs.user.room)}<small>Filled in from your account</small></span></div><input type="hidden" id="nm" value="${esc(prefs.user.name||prefs.name||'')}"><input type="hidden" id="rm" value="${esc(prefs.user.room)}">`:`<div class="row"><div class="field" style="flex:1.4"><label>Name (optional)</label><input id="nm" maxlength="24" placeholder="e.g. Aarav" value="${esc(prefs.name||'')}"></div><div class="field" style="flex:1"><label>Room</label><input id="rm" maxlength="8" placeholder="B-204" value="${esc(prefs.room||'')}"></div></div>`;
 const readName=()=>{prefs.name=$('#nm').value.trim();prefs.room=$('#rm').value.trim();savePrefs()};
 
 // Step 1: choose cycle → Step 2: OTP
@@ -553,7 +559,7 @@ function startWash(m,dur,user,bid){
   if(m.state!=='free'){toast('Machine is still in use');return}
   const now=Date.now();Object.assign(m,{state:'busy',dur,start:now,end:now+dur*MIN(),user:user||'',owner:ME,hold:null});
   if(bid)S.bookings=S.bookings.filter(b=>b.id!==bid);
-  S.log.push({t:now,d:dur,m:m.id});save();lastKey='';render();
+  S.log.push({t:now,d:dur,m:m.id,u:ME});save();lastKey='';render();
 }
 
 function bookDialog(id){
@@ -619,6 +625,7 @@ document.addEventListener('click',e=>{
   const id=+el.dataset.id,m=M(id);
   switch(el.dataset.act){
     case'reserve':reserveDialog(id);break;
+    case'quickscan':quickScan();break;
     case'report':reportDialog(id);break;
     case'resolve':{const r=S.reports.find(x=>x.id===el.dataset.rid);if(r){r.cleared=true;r.clearedAt=Date.now();save();lastKey='';render();toast(`Issue on ${M(r.mid)?M(r.mid).name:'machine'} marked as resolved`)}break}
     case'green':greenInfo();break;

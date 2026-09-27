@@ -56,3 +56,27 @@ Edit the files in `src/`, then run `src/build.sh` to regenerate `index.html`.
 - The colour blends continuously: amber/red at 0%, blue/purple at 50%, green/teal at 100%, with separate light and dark palettes.
 - It's written to `--bg-gradient-start/-mid/-end` on `:root`. These are registered with `@property`, so they fade over 1.5s.
 - The percentage is logged to the console as `[WashQ] ambient: …`.
+
+## v9: scan-first entry and accounts
+
+**Scan QR (UPI-style).**
+- A large "Scan QR" tile sits at the top of the dashboard. On phones there's also a floating scan button at the bottom-right that stays visible while you scroll.
+- Both open the same full-screen jsQR scanner, with the same camera-permission, Retry and manual-ID handling as the unlock flow.
+- What happens after a scan depends on the machine:
+  - **Free:** Reserve → checklist → unlock code.
+  - **Busy, finished or reserved:** its live status, plus "Notify me", which uses the existing queue.
+  - **You have a booking on it:** the booking unlock (checklist → verify → PIN).
+  - **Not a WashQ code:** "Unrecognized QR code" with Retry.
+- A code from another block (e.g. `WM-A04`) switches to that block automatically.
+
+**Accounts.** These use the existing `/api/login`, `/api/me`, `/api/logout` and `/api/bookings`; no new auth logic was added.
+- The avatar sits at the far right of the header: your initials when signed in, a person icon when signed out.
+- **Sign in:** Name, Room number, Class/Year (optional) and Password, sent as `{room, password, name}`.
+  - A new room creates an account automatically, and you choose the password.
+  - The session is a 30-day bearer token, re-checked with `/api/me` on every page load.
+- **Account panel:** a dropdown on desktop, a bottom sheet on phones.
+  - Name, room and class/year, plus washes this month, minutes washed and bookings this month.
+  - My Bookings (from `/api/bookings`), with the PIN if the booking was made on this device.
+  - Log out, which calls `/api/logout`.
+- When you're signed in, your name and room are filled in automatically in Reserve and Book.
+- Class/Year has no backend field, so it's saved on the device.

@@ -712,6 +712,115 @@ main,#banners,h1{position:relative;z-index:1}
   #modal .dialog:has(#durOpts) h2{margin-bottom:4px}
 }
 @media (min-width:900px) and (min-height:560px){#modal .dialog .actions,[data-theme] #modal .dialog .actions{background:none;position:static;padding-bottom:0}}
+
+/* ===== v9: scan-first entry + account ===== */
+/* --- Scan QR tile: the most prominent action on the dashboard --- */
+.scan-tile{width:100%;display:flex;align-items:center;gap:16px;margin:18px 0 4px;padding:18px 20px;border-radius:var(--r-lg);text-align:left;color:#fff;
+  background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 62%,#8b5cf6));
+  box-shadow:0 10px 28px color-mix(in srgb,var(--primary) 35%,transparent),inset 0 1px 0 rgba(255,255,255,.25);
+  border:1px solid rgba(255,255,255,.18);transition:transform .15s ease,box-shadow .2s ease}
+.scan-tile:hover{transform:translateY(-1px);box-shadow:0 14px 34px color-mix(in srgb,var(--primary) 42%,transparent),inset 0 1px 0 rgba(255,255,255,.25)}
+.scan-tile:active{transform:scale(.985)}
+.scan-tile:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 45%,#fff);outline-offset:3px}
+.st-ic{width:56px;height:56px;flex:none;border-radius:16px;display:grid;place-items:center;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);position:relative;overflow:hidden}
+.st-ic::after{content:"";position:absolute;left:12px;right:12px;height:2px;border-radius:2px;background:#fff;opacity:.85;animation:stl 2.2s ease-in-out infinite}
+@keyframes stl{0%,100%{top:14px}50%{top:40px}}
+.st-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.st-t b{font-size:20px;font-weight:700;letter-spacing:-.2px}
+.st-t small{font-size:13px;opacity:.9;line-height:1.35}
+.st-go{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2)}
+@media (prefers-reduced-motion:reduce){.st-ic::after{animation:none;top:27px}}
+
+/* --- Floating scan button (phones) --- */
+.scan-fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:45;width:62px;height:62px;border-radius:50%;
+  display:none;place-items:center;color:#fff;background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 62%,#8b5cf6));
+  box-shadow:0 10px 26px color-mix(in srgb,var(--primary) 45%,transparent),0 2px 6px rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.22);
+  transform:scale(.6);opacity:0;pointer-events:none;transition:transform .2s cubic-bezier(.2,.9,.3,1.3),opacity .2s ease}
+.scan-fab.on{transform:none;opacity:1;pointer-events:auto}
+.scan-fab:active{transform:scale(.92)}
+@media (max-width:720px){.scan-fab{display:grid}main{padding-bottom:110px}.toast{bottom:96px}}
+
+/* --- quick-scan status sheet --- */
+.qs-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.qs-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none}
+.qs-ic.busy{background:var(--red-bg,rgba(217,48,37,.12));color:var(--red)}
+.qs-ic.done{background:var(--yellow-bg);color:var(--yellow-s,#b26a00)}
+.qs-ic.hold{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--primary)}
+.qs-status{margin-bottom:8px}
+.qs-detail{margin:0 0 10px!important;color:var(--text)!important}
+.qs-q{font-size:13px!important;color:var(--muted)!important;margin:10px 0 14px!important}
+.scan-sheet .progress{height:6px;border-radius:99px;background:var(--border);overflow:hidden}
+.scan-sheet .progress i{display:block;height:100%;background:var(--red);border-radius:99px;transition:width 1s linear}
+
+/* --- header account button (far right) --- */
+.acct-btn{margin-left:2px}
+.acct-btn.in{padding:0}
+.acct-btn .avatar{width:32px;height:32px;font-size:12.5px;box-shadow:0 0 0 2px var(--glass-strong),0 0 0 3.5px color-mix(in srgb,var(--primary) 45%,transparent)}
+.acct-btn[aria-expanded=true] .avatar{box-shadow:0 0 0 2px var(--glass-strong),0 0 0 3.5px var(--primary)}
+.avatar.lg{width:52px;height:52px;font-size:18px;flex:none}
+
+/* --- login form --- */
+.acct-hero{width:56px;height:56px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;color:var(--primary);background:color-mix(in srgb,var(--primary) 13%,transparent)}
+.opt-l{text-transform:none;letter-spacing:0;font-weight:500;opacity:.8}
+.acct-note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;margin:2px 0 12px;border-radius:var(--r-md);font-size:13px;line-height:1.45;color:var(--muted);
+  background:color-mix(in srgb,var(--primary) 7%,var(--glass-soft));border:1px solid var(--glass-border)}
+.acct-note svg{flex:none;margin-top:2px;color:var(--primary)}
+.acct-note b{color:var(--text)}
+.acct-form .row{gap:12px}
+
+/* autofilled identity in reserve/book forms */
+.as-user{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:14px;border-radius:var(--r-md);background:var(--glass-soft);border:1px solid var(--glass-border);font-size:14px;color:var(--text)}
+.as-user small{display:block;font-size:12px;color:var(--muted)}
+
+/* --- account panel: dropdown (desktop) / bottom sheet (phones) --- */
+.acct-scrim{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.2);opacity:0;transition:opacity .2s ease}
+.acct-scrim.on{opacity:1}
+body.acct-open header{z-index:100}
+.acct-panel{position:fixed;z-index:101;top:var(--ap-top,72px);right:max(16px,calc((100vw - min(94vw,1560px))/2));width:360px;max-height:calc(100dvh - var(--ap-top,72px) - 16px);overflow-y:auto;overscroll-behavior:contain;
+  padding:18px;border-radius:var(--r-lg);border:1px solid var(--glass-border);
+  background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);
+  box-shadow:0 8px 24px rgba(0,0,0,.15),0 2px 6px rgba(0,0,0,.06);color:var(--text);
+  opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .2s ease,transform .2s ease}
+[data-theme=dark] .acct-panel{background:rgba(30,32,46,.96);border-color:rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.3)}
+.acct-panel.on{opacity:1;transform:none}
+.ap-grab{display:none}
+.ap-head{display:flex;align-items:center;gap:12px}
+.ap-id{flex:1;min-width:0;display:flex;flex-direction:column}
+.ap-id b{font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-id small{font-size:13px;color:var(--muted)}
+.ap-x{flex:none}
+.ap-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px}
+.ap-stats>div{padding:10px 8px;border-radius:var(--r-md);background:var(--glass-soft);border:1px solid var(--glass-border);text-align:center;display:flex;flex-direction:column;gap:2px}
+.ap-stats b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.ap-stats small{font-size:11.5px;color:var(--muted);line-height:1.25}
+.ap-sec{margin-top:16px}
+.ap-h{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px}
+.ap-cls{display:flex;gap:8px}
+.ap-cls input{flex:1;min-width:0;height:40px;padding:0 12px;border-radius:var(--r-md);border:1px solid var(--glass-border);background:var(--glass-soft);color:var(--text);font:inherit;font-size:14px}
+.ap-cls input:focus{outline:2px solid color-mix(in srgb,var(--primary) 50%,transparent);outline-offset:1px}
+.ap-cls .btn{flex:none;height:40px}
+.ap-list{display:flex;flex-direction:column;gap:8px}
+.ap-empty{font-size:13px;color:var(--muted);padding:12px;border-radius:var(--r-md);background:var(--glass-soft);border:1px dashed var(--glass-border);display:flex;gap:8px;align-items:center;line-height:1.45}
+.ap-bk{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:var(--r-md);background:var(--glass-soft);border:1px solid var(--glass-border);color:var(--text);transition:background .15s,transform .12s}
+.ap-bk:hover{background:color-mix(in srgb,var(--primary) 8%,var(--glass-soft))}
+.ap-bk:active{transform:scale(.99)}
+.ap-bk-ic{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent)}
+.ap-bk-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.ap-bk-t b{font-size:14px;font-weight:600}
+.ap-bk-t small{font-size:12px;color:var(--muted);line-height:1.4}
+.ap-bk .badge{flex:none;font-size:11.5px}
+.ap-out{width:100%;margin-top:18px;color:var(--red)}
+
+@media (max-width:600px){
+  .scan-tile{padding:16px;gap:14px;margin-top:14px}
+  .st-ic{width:50px;height:50px}.st-t b{font-size:18px}.st-t small{font-size:12.5px}
+  .acct-panel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:88dvh;border-radius:24px 24px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(100%);transform-origin:bottom center;transition:transform .28s cubic-bezier(.2,.9,.3,1),opacity .2s}
+  .acct-panel.on{transform:none}
+  .ap-grab{display:block;width:40px;height:4px;border-radius:4px;background:var(--border);margin:0 auto 12px}
+}
+.acct-panel .btn.ap-out{color:var(--red)}
+.ap-bk-t b .nw{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -727,12 +836,13 @@ main,#banners,h1{position:relative;z-index:1}
       <a href="#/admin" data-r="admin"><svg class="nav-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analytics</span></a>
     </nav>
     <a class="icon-btn" href="#/setup" id="gear" title="Machine setup (admin)" aria-label="Machine setup"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
-    <button class="icon-btn" id="acctBtn" aria-label="Account" title="Account" style="display:none"></button>
     <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode"></button>
+    <button class="icon-btn acct-btn" id="acctBtn" aria-label="Sign in" title="Sign in" aria-haspopup="dialog"></button>
   </div>
 </header>
 <div class="block-scrim" id="blockScrim" hidden></div>
 <div id="banners"></div>
+<button class="scan-fab" id="scanFab" data-act="quickscan" aria-label="Scan machine QR"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg></button>
 <main id="app"></main>
 <div id="modal"></div>
 
@@ -3282,6 +3392,11 @@ function viewHome(soft){
   const c={free:0,busy:0,done:0,hold:0};S.machines.forEach(m=>c[info(m).cls]++);
   $('#app').innerHTML=`
     <h1>Washing machines</h1><div class="sub">Live availability · updates every second</div>
+    <button class="scan-tile" data-act="quickscan" aria-label="Scan machine QR code to start">
+      <span class="st-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg></span>
+      <span class="st-t"><b>Scan QR</b><small>Scan the sticker on any machine to start a wash or check its status</small></span>
+      <span class="st-go"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+    </button>
     <div class="toolbar">
       <div class="stats">
         <span class="chip"><span class="dot" style="background:var(--green)"></span>${c.free} free</span>
@@ -3496,7 +3611,7 @@ function readDur(limitMs){
   return v;
 }
 const who=()=>[prefs.name,prefs.room].filter(Boolean).join(' · ');
-const nameFields=()=>`<div class="row"><div class="field" style="flex:1.4"><label>Name (optional)</label><input id="nm" maxlength="24" placeholder="e.g. Aarav" value="${esc(prefs.name||'')}"></div><div class="field" style="flex:1"><label>Room</label><input id="rm" maxlength="8" placeholder="B-204" value="${esc(prefs.room||'')}"></div></div>`;
+const nameFields=()=>signedIn()?`<div class="as-user"><span class="avatar">${esc(initials(prefs.user))}</span><span><b>${esc(prefs.user.name||'You')}</b> · Room ${esc(prefs.user.room)}<small>Filled in from your account</small></span></div><input type="hidden" id="nm" value="${esc(prefs.user.name||prefs.name||'')}"><input type="hidden" id="rm" value="${esc(prefs.user.room)}">`:`<div class="row"><div class="field" style="flex:1.4"><label>Name (optional)</label><input id="nm" maxlength="24" placeholder="e.g. Aarav" value="${esc(prefs.name||'')}"></div><div class="field" style="flex:1"><label>Room</label><input id="rm" maxlength="8" placeholder="B-204" value="${esc(prefs.room||'')}"></div></div>`;
 const readName=()=>{prefs.name=$('#nm').value.trim();prefs.room=$('#rm').value.trim();savePrefs()};
 
 // Step 1: choose cycle → Step 2: OTP
@@ -3557,7 +3672,7 @@ function startWash(m,dur,user,bid){
   if(m.state!=='free'){toast('Machine is still in use');return}
   const now=Date.now();Object.assign(m,{state:'busy',dur,start:now,end:now+dur*MIN(),user:user||'',owner:ME,hold:null});
   if(bid)S.bookings=S.bookings.filter(b=>b.id!==bid);
-  S.log.push({t:now,d:dur,m:m.id});save();lastKey='';render();
+  S.log.push({t:now,d:dur,m:m.id,u:ME});save();lastKey='';render();
 }
 
 function bookDialog(id){
@@ -3623,6 +3738,7 @@ document.addEventListener('click',e=>{
   const id=+el.dataset.id,m=M(id);
   switch(el.dataset.act){
     case'reserve':reserveDialog(id);break;
+    case'quickscan':quickScan();break;
     case'report':reportDialog(id);break;
     case'resolve':{const r=S.reports.find(x=>x.id===el.dataset.rid);if(r){r.cleared=true;r.clearedAt=Date.now();save();lastKey='';render();toast(`Issue on ${M(r.mid)?M(r.mid).name:'machine'} marked as resolved`)}break}
     case'green':greenInfo();break;
@@ -3833,36 +3949,6 @@ async function initApi(){
 }
 const myQrBookingFor=code=>S.bookings.filter(b=>b.client===ME&&b.sid&&M(b.mid)&&mcode(b.mid)===code.toUpperCase()).sort((a,b)=>a.start-b.start)[0];
 
-// ---------- account ----------
-function renderAcct(){
-  const b=$('#acctBtn');if(!b)return;b.style.display=API.ok?'':'none';
-  const u=prefs.token&&prefs.user;
-  b.innerHTML=u?`<span class="avatar">${esc((u.name||u.room).slice(0,2).toUpperCase())}</span>`
-    :'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
-  b.onclick=()=>u?acctDialog():loginDialog(null);
-}
-function acctDialog(){
-  const u=prefs.user||{};
-  showModal(`<h2>${esc(u.name||'Signed in')}</h2><p>Room ${esc(u.room)} · each booking gets its own 4-digit unlock PIN.</p>
-    <div class="actions"><button class="btn tonal" data-close>Close</button><button class="btn primary" id="lo">Sign out</button></div>`);
-  $('[data-close]').onclick=closeModal;
-  $('#lo').onclick=async()=>{try{await api('POST','/api/logout')}catch(e){}prefs.token=null;prefs.user=null;savePrefs();renderAcct();closeModal();toast('Signed out')};
-}
-function loginDialog(then,title){
-  showModal(`<form id="lf"><h2>${esc(title||'Sign in')}</h2><p>Use your room number and password. New room? An account is created automatically.</p>
-    <div class="row"><div class="field" style="flex:1"><label>Room</label><input id="lr" maxlength="10" placeholder="B-204" autocomplete="username" value="${esc(prefs.room||'')}" required></div>
-    <div class="field" style="flex:1.3"><label>Name (optional)</label><input id="ln" maxlength="24" placeholder="Aarav" value="${esc(prefs.name||'')}"></div></div>
-    <div class="field"><label>Password</label><input id="lp" type="password" minlength="4" autocomplete="current-password" placeholder="At least 4 characters" required></div>
-    <div class="msg err" id="lm"></div>
-    <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary" id="lb">Sign in</button></div></form>`);
-  $('[data-close]').onclick=closeModal;
-  $('#lf').onsubmit=async e=>{e.preventDefault();const btn=$('#lb');btn.disabled=true;btn.textContent='Signing in…';
-    try{const r=await api('POST','/api/login',{room:$('#lr').value,name:$('#ln').value,password:$('#lp').value});
-      prefs.token=r.token;prefs.user=r.user;prefs.room=r.user.room;if(r.user.name)prefs.name=r.user.name;savePrefs();renderAcct();
-      toast(r.created?`Account created for room ${r.user.room}`:`Signed in as ${r.user.room}`);closeModal();then&&then()}
-    catch(er){$('#lm').textContent=er.message;btn.disabled=false;btn.textContent='Sign in'}};
-}
-
 // ================= Booked-slot QR unlock flow =================
 // A Reserve → Booking Confirmed ("Scan QR to Unlock")
 // B Pre-unlock checklist
@@ -3919,24 +4005,26 @@ function parseMachineQR(text){
 // ---------- C: Scan Machine QR screen ----------
 let SC=null;
 function openScanner(b){
+  const quick=!b;   // quick = scan-first entry point (no booking yet)
   closeScanner(true);
   const el=document.createElement('div');el.className='scan';el.id='scan';
   el.innerHTML=`<video playsinline muted autoplay></video>
     <div class="scan-mask"><div class="scan-frame"><i></i><i></i><i></i><i></i><div class="scan-line"></div></div></div>
-    <div class="scan-top"><button class="scan-ib" id="scX" aria-label="Close">${isz(ic.x,22)}</button><div class="scan-title">Scan Machine QR</div>
+    <div class="scan-top"><button class="scan-ib" id="scX" aria-label="Close">${isz(ic.x,22)}</button><div class="scan-title">${quick?'Scan QR':'Scan Machine QR'}</div>
       <button class="scan-ib" id="scT" aria-label="Flashlight" style="visibility:hidden"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 6l2 5v9h8v-9zM6 6V2h12v4M12 13v2"/></svg></button></div>
     <div class="scan-bottom">
-      <div class="scan-hint" id="scH">Stand in front of <b>${esc(M(b.mid).name)}</b> (${mcode(b.mid)}) and scan the QR sticker on it.</div>
+      <div class="scan-hint" id="scH">${quick?'Point your camera at the machine’s QR code':`Stand in front of <b>${esc(M(b.mid).name)}</b> (${mcode(b.mid)}) and scan the QR sticker on it.`}</div>
       <div class="scan-err" id="scE" role="alert"></div>
       <button class="btn primary scan-open" id="scO">${isz(ic.scan,20)}Open Camera &amp; Scan</button>
       <button class="scan-manual" id="scM">Enter machine ID manually</button></div>
     <div class="scan-sheet" id="scS"></div>`;
   document.body.appendChild(el);document.body.style.overflow='hidden';
-  SC={el,b,stream:null,run:false,torch:false,busy:false,started:0};
+  SC={el,b,quick,stream:null,run:false,torch:false,busy:false,started:0};
   $('#scX').onclick=()=>closeScanner();
   $('#scM').onclick=()=>manualEntry();
   $('#scO').onclick=()=>startCamera();
   ensureDecoder();   // load the QR decoder up-front so the first scan is instant
+  if(quick)startCamera();   // scan-first: open the camera straight away (same permission handling)
 }
 function closeScanner(instant){
   if(!SC)return;SC.run=false;if(SC.stream)SC.stream.getTracks().forEach(t=>t.stop());
@@ -3986,7 +4074,7 @@ async function startCamera(){
   btn.style.display='none';btn.disabled=false;
   const v=s.el.querySelector('video');v.srcObject=s.stream;try{await v.play()}catch(e){}
   s.el.classList.add('live');s.run=true;s.started=Date.now();
-  $('#scH').innerHTML=`Point your camera at the QR code on <b>${esc(M(s.b.mid).name)}</b> — it scans automatically.`;
+  $('#scH').innerHTML=s.b?`Point your camera at the QR code on <b>${esc(M(s.b.mid).name)}</b> — it scans automatically.`:'Point your camera at the machine’s QR code — it scans automatically.';
   const track=s.stream.getVideoTracks()[0],caps=track.getCapabilities?track.getCapabilities():{};
   if(caps.torch){const t=$('#scT');t.style.visibility='visible';t.onclick=async()=>{try{s.torch=!s.torch;await track.applyConstraints({advanced:[{torch:s.torch}]});t.classList.toggle('on',s.torch)}catch(e){scanErr('Flashlight isn’t available')}}}
   let dec;try{dec=await ensureDecoder()}catch(e){return camUnavailable('The QR decoder failed to load.')}
@@ -4013,7 +4101,9 @@ let lastBad='';
 function onScanned(text){
   if(!SC||SC.busy)return;
   const code=parseMachineQR(text);
+  if(!code&&SC.quick){SC.busy=true;return unrecognizedQR()}
   if(!code){if(lastBad!==text){lastBad=text;scanErr('This QR code isn’t a WashQ machine code. Scan the sticker on the washing machine.')}return}
+  if(SC.quick){SC.busy=true;if(navigator.vibrate)navigator.vibrate(60);return quickScanned(code)}
   SC.busy=true;if(navigator.vibrate)navigator.vibrate(60);
   // E(1): immediate client-side match check — no unlock, no password on mismatch
   if(code!==mcode(SC.b.mid)){wrongMachine(code);return}
@@ -4021,15 +4111,15 @@ function onScanned(text){
   setTimeout(()=>verifyMachine(SC.b,code),300);
 }
 function manualEntry(){
-  if(!SC)return;
-  sheet(`<h2>Enter machine ID</h2><p>It’s printed under the QR code, e.g. ${mcode(SC.b.mid)}. Use this only if the camera isn’t working.</p>
-    <form id="mf"><div class="field"><input id="mi" placeholder="${mcode(SC.b.mid)}" autocapitalize="characters" maxlength="8" required></div>
+  if(!SC)return;const ex=SC.b?mcode(SC.b.mid):mcode(1);
+  sheet(`<h2>Enter machine ID</h2><p>It’s printed under the QR code, e.g. ${ex}. Use this only if the camera isn’t working.</p>
+    <form id="mf"><div class="field"><input id="mi" placeholder="${ex}" autocapitalize="characters" maxlength="8" required></div>
     <div class="actions"><button type="button" class="btn tonal" id="mc">Back to camera</button><button class="btn primary">Verify</button></div></form>`);
   setTimeout(()=>$('#mi')&&$('#mi').focus(),80);
   $('#mc').onclick=()=>hideSheet();
   $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const mm=raw.match(/^([A-C])?(\d{1,4})$/);
     const code=mm?(mm[1]?'WM-'+mm[1]+mm[2].padStart(2,'0'):mcode(+mm[2])):null;
-    if(!code){toast('Enter a valid machine ID like '+mcode(SC.b.mid));return}
+    if(!code){toast('Enter a valid machine ID like '+ex);return}
     SC.busy=false;onScanned(code)};
 }
 function sheet(html){const s=$('#scS');if(!s)return;s.innerHTML=`<div class="dialog">${html}</div>`;s.classList.add('on')}
@@ -4134,6 +4224,185 @@ function unlocked(b,code){
 
 // debug/test handle (read-only helpers; no secrets)
 window.WQ={get S(){return S},set S(v){S=v},save,render:()=>{lastKey='';render()},startUnlock,openScanner,parseMachineQR,setMood};
+
+// ================= Scan-first entry point (UPI-style "Scan QR") =================
+// Dashboard tile + mobile FAB → full-screen scanner (same openScanner/startCamera/camDenied as the unlock flow)
+// → valid machine QR: Free → existing Reserve → checklist → code flow · Busy/Done/Reserved → live status + Notify me
+// → my booked machine → existing booking unlock (checklist → verify → PIN) · unknown QR → "Unrecognized QR code"
+function quickScan(){
+  if(typeof closeModal==='function')closeModal();
+  openScanner(null);
+}
+// WM-04 → Block C #4 · WM-A04 → Block A #4 (switches block if needed). Returns machine or null.
+function machineFromCode(code){
+  const mm=String(code||'').toUpperCase().match(/^WM-([A-C])?(\d{2,4})$/);if(!mm)return null;
+  const blk=mm[1]||'C',id=+mm[2];
+  if(!BLOCKS[blk]||id<1||id>BLOCKS[blk].n)return null;
+  if(blk!==BLOCK)switchBlock(blk);   // scanned a machine in another block → show that block
+  return M(id)||null;
+}
+function unrecognizedQR(){
+  if(!SC)return;SC.el.classList.add('wrong');beep(2);
+  sheet(`<div class="bad-ic">${isz(ic.x,28)}</div><h2 class="err-t" style="justify-content:center">Unrecognized QR code</h2>
+    <p style="text-align:center">This QR code isn’t a WashQ machine. Scan the QR sticker on the front of the washing machine.</p>
+    <div class="actions" style="justify-content:center;flex-wrap:wrap"><button class="btn tonal" id="uqM">Enter machine ID</button><button class="btn primary" id="uqR">Retry</button></div>`);
+  $('#uqR').onclick=()=>{lastBad=null;hideSheet()};$('#uqM').onclick=()=>manualEntry();
+}
+function quickScanned(code){
+  const m=machineFromCode(code);
+  if(!m){lastBad=null;return unrecognizedQR()}
+  SC.el.classList.add('hit');beep(1);
+  // I already have a booking on this machine → continue the booking unlock flow (checklist → verify → PIN)
+  const mine=S.bookings.filter(b=>b.client===ME&&b.sid&&b.mid===m.id&&(b.state!=='upcoming'||b.start-Date.now()<5*60000)).sort((a,b)=>a.start-b.start)[0];
+  if(mine){closeScanner(true);return startUnlock(mine,mcode(m.id))}
+  const i=info(m);
+  if(i.cls==='free'){closeScanner(true);toast(`${m.name} · ${mcode(m.id)} is free`);return reserveDialog(m.id)}
+  if(i.cls==='hold'&&i.owner===ME){closeScanner(true);location.hash='#/machine/'+m.id;return}
+  // not free → live status + Notify me
+  const tone=i.cls==='busy'?'busy':i.cls==='done'?'done':'hold';
+  const detail=i.cls==='busy'?`${m.user?esc(m.user)+' · ':''}${Math.round(i.pct)}% complete · free in about ${minsLeft(i.left)} min`
+    :i.cls==='done'?`Cycle finished — waiting for ${m.user?esc(m.user):'the owner'} to collect. Auto-frees in ${fmt(Math.max(0,i.left))}.`
+    :'Someone has reserved this machine and is unlocking it now.';
+  const q=m.queue.length;
+  sheet(`<div class="qs-head"><div class="qs-ic ${tone}">${isz(ic.scan,22)}</div><div><h2 style="margin:0">${esc(m.name)}</h2><small class="sub">${mcode(m.id)} · Block ${BLOCK}</small></div></div>
+    <div class="qs-status"><span class="badge ${tone}"><span class="dot"></span><span id="qsL">${esc(i.label)}</span></span></div>
+    <p class="qs-detail" id="qsD">${detail}</p>
+    ${i.cls==='busy'?`<div class="progress"><i id="qsP" style="width:${i.pct}%"></i></div>`:''}
+    <p class="qs-q">${q?`${q} ${q===1?'person':'people'} waiting`:'Nobody waiting yet'}${inQueue(m)?` · you’re #${qpos(m)}`:''}</p>
+    <div class="actions" style="flex-wrap:wrap">
+      <button class="btn tonal" id="qsX">Close</button>
+      <button class="btn tonal" id="qsV">View machine</button>
+      ${inQueue(m)?`<button class="btn tonal" disabled>✓ #${qpos(m)} in line</button>`:`<button class="btn primary" id="qsN">${ic.bell}Notify me</button>`}
+    </div>`);
+  const tick=setInterval(()=>{if(!$('#qsL')){clearInterval(tick);return}const j=info(m);$('#qsL').textContent=j.label;if($('#qsP'))$('#qsP').style.width=j.pct+'%';
+    if(j.cls==='free'){clearInterval(tick);$('#qsD').innerHTML='<b>It’s free now!</b>';const n=$('#qsN');if(n){n.innerHTML=ic.lock+'Reserve &amp; Start';n.onclick=()=>{closeScanner(true);reserveDialog(m.id)}}}},1000);
+  $('#qsX').onclick=()=>closeScanner();
+  $('#qsV').onclick=()=>{closeScanner();location.hash='#/machine/'+m.id};
+  const n=$('#qsN');if(n)n.onclick=()=>{closeScanner(true);actOn('queue',m.id)};
+}
+// fire an existing dashboard action (reuses the delegated [data-act] handlers — no duplicated logic)
+function actOn(act,id){const t=document.createElement('button');t.hidden=true;t.dataset.act=act;t.dataset.id=id;document.body.appendChild(t);t.click();t.remove()}
+
+// FAB: visible on phones on the dashboard; hidden while a modal/scanner is open
+function syncFab(){
+  const f=$('#scanFab');if(!f)return;
+  const show=route==='home'&&!document.getElementById('scan')&&!$('#modal').innerHTML.trim();
+  f.classList.toggle('on',show);
+}
+setInterval(syncFab,400);
+
+// ================= Account / profile (uses existing /api/login · /api/me · /api/logout · /api/bookings) =================
+// Session = bearer token from /api/login (30-day server session), kept in prefs.token and re-validated with /api/me on load.
+// Class/Year has no backend field, so it's a device-local profile extra (prefs.cls) — no new auth logic.
+const personSvg='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+const initials=u=>{const n=(u&&u.name||'').trim();if(n){const p=n.split(/\s+/);return((p[0][0]||'')+(p.length>1?p[p.length-1][0]:(p[0][1]||''))).toUpperCase()}return(u&&u.room||'?').replace(/[^A-Z0-9]/gi,'').slice(0,2).toUpperCase()};
+const signedIn=()=>!!(prefs.token&&prefs.user);
+
+function renderAcct(){
+  const b=$('#acctBtn');if(!b)return;b.style.display='';
+  const u=signedIn()?prefs.user:null;
+  b.innerHTML=u?`<span class="avatar">${esc(initials(u))}</span>`:personSvg;
+  b.classList.toggle('in',!!u);
+  b.setAttribute('aria-label',u?`Account: ${u.name||u.room}`:'Sign in');b.title=u?`${u.name||'Signed in'} · ${u.room}`:'Sign in';
+  b.setAttribute('aria-expanded','false');
+  b.onclick=e=>{e.stopPropagation();if(u)toggleAcctPanel();else loginDialog(null)};
+  if(!u)closeAcctPanel(true);
+}
+
+// ---------- logged out: login / create account ----------
+function loginDialog(then,title){
+  closeAcctPanel(true);
+  const off=!API.ok;
+  showModal(`<form id="lf" class="acct-form"><div class="acct-hero">${personSvg.replace(/20/g,'26')}</div>
+    <h2 style="justify-content:center">${esc(title||'Sign in to WashQ')}</h2>
+    <p style="text-align:center">Book slots, get your unlock PIN and see your washes.</p>
+    <div class="field"><label for="ln">Name</label><input id="ln" maxlength="24" placeholder="e.g. Aarav Sharma" autocomplete="name" value="${esc(prefs.name||'')}"></div>
+    <div class="row"><div class="field" style="flex:1"><label for="lr">Room number</label><input id="lr" maxlength="10" placeholder="B-204" autocomplete="username" autocapitalize="characters" value="${esc(prefs.room||'')}" required></div>
+    <div class="field" style="flex:1"><label for="lc">Class / Year <span class="opt-l">(optional)</span></label><input id="lc" maxlength="24" placeholder="2nd yr · CSE" value="${esc(prefs.cls||'')}"></div></div>
+    <div class="field"><label for="lp">Password</label><input id="lp" type="password" minlength="4" autocomplete="current-password" placeholder="At least 4 characters" required></div>
+    <div class="acct-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span><b>New here?</b> Your account is created automatically the first time you sign in with your room number. Pick a password (4+ characters) and use it next time.</span></div>
+    ${off?'<div class="msg err">The WashQ server isn’t reachable right now, so sign-in is unavailable. You can still use the live board.</div>':''}
+    <div class="msg err" id="lm"></div>
+    <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary" id="lb" ${off?'disabled':''}>Sign in</button></div></form>`);
+  $('[data-close]').onclick=closeModal;
+  setTimeout(()=>{const f=$(prefs.room?'#lp':'#ln');f&&f.focus()},80);
+  $('#lf').onsubmit=async e=>{e.preventDefault();const btn=$('#lb'),msg=$('#lm');btn.disabled=true;btn.innerHTML='<span class="spin sm"></span>Signing in…';msg.textContent='';
+    try{
+      // exact /api/login contract: {room, password, name} → {token, user:{id,room,name}, created}
+      const r=await api('POST','/api/login',{room:$('#lr').value,name:$('#ln').value.trim(),password:$('#lp').value});
+      prefs.token=r.token;prefs.user=r.user;prefs.room=r.user.room;if(r.user.name)prefs.name=r.user.name;prefs.cls=$('#lc').value.trim();savePrefs();
+      renderAcct();closeModal();lastKey='';render();
+      toast(r.created?`Welcome, ${r.user.name||r.user.room}! Account created for room ${r.user.room}`:`Signed in as ${r.user.name||r.user.room}`);
+      then&&then();
+    }catch(er){msg.textContent=er.message;btn.disabled=false;btn.textContent='Sign in';if(er.code==='bad_login'){$('#lp').value='';$('#lp').focus()}}};
+}
+
+// ---------- logged in: account panel (dropdown on desktop, bottom sheet on phones) ----------
+function toggleAcctPanel(){$('#acctPanel')?closeAcctPanel():openAcctPanel()}
+function closeAcctPanel(instant){
+  const p=$('#acctPanel'),s=$('#acctScrim');if(!p)return;
+  document.body.classList.remove('acct-open');const btn=$('#acctBtn');if(btn)btn.setAttribute('aria-expanded','false');
+  p.classList.remove('on');s&&s.classList.remove('on');
+  const rm=()=>{p.remove();s&&s.remove()};instant?rm():setTimeout(rm,200);
+}
+function washStats(){
+  // washes I started on this device (log entries tagged with my client id), across all blocks, this calendar month
+  const d=new Date(),from=new Date(d.getFullYear(),d.getMonth(),1).getTime();let n=0,min=0;
+  Object.keys(BLOCKS).forEach(k=>{const st=k===BLOCK?S:loadBlock(k);(st.log||[]).forEach(e=>{if(e.u===ME&&e.t>=from){n++;min+=e.d}})});
+  return{n,min};
+}
+function openAcctPanel(){
+  closeAcctPanel(true);closeModal();
+  const u=prefs.user,st=washStats();
+  const scrim=document.createElement('div');scrim.className='acct-scrim';scrim.id='acctScrim';
+  const p=document.createElement('div');p.className='acct-panel';p.id='acctPanel';p.setAttribute('role','dialog');p.setAttribute('aria-label','Your account');
+  p.innerHTML=`<div class="ap-grab"></div>
+    <div class="ap-head"><span class="avatar lg">${esc(initials(u))}</span><div class="ap-id"><b>${esc(u.name||'Student')}</b><small>Room ${esc(u.room)}${prefs.cls?' · '+esc(prefs.cls):''}</small></div>
+      <button class="icon-btn ap-x" id="apX" aria-label="Close">${ic.x}</button></div>
+    <div class="ap-stats">
+      <div><b>${st.n}</b><small>wash${st.n===1?'':'es'} this month</small></div>
+      <div><b>${st.min}</b><small>minutes washed</small></div>
+      <div><b id="apBk">–</b><small>bookings this month</small></div>
+    </div>
+    <div class="ap-sec"><div class="ap-h">Class / Year</div>
+      <div class="ap-cls"><input id="apCls" maxlength="24" placeholder="Add class / year (optional)" value="${esc(prefs.cls||'')}" aria-label="Class or year"><button class="btn tonal" id="apClsS">Save</button></div></div>
+    <div class="ap-sec"><div class="ap-h">My bookings</div><div id="apList" class="ap-list"><div class="ap-empty"><span class="spin sm"></span> Loading…</div></div></div>
+    <button class="btn tonal ap-out" id="apOut">Log out</button>`;
+  document.body.append(scrim,p);document.body.classList.add('acct-open');$('#acctBtn').setAttribute('aria-expanded','true');
+  requestAnimationFrame(()=>{scrim.classList.add('on');p.classList.add('on')});
+  // desktop: anchor under the header's right edge
+  const hb=document.querySelector('header').getBoundingClientRect();p.style.setProperty('--ap-top',(hb.bottom+8)+'px');
+  scrim.onclick=()=>closeAcctPanel();$('#apX').onclick=()=>closeAcctPanel();
+  $('#apClsS').onclick=()=>{prefs.cls=$('#apCls').value.trim();savePrefs();$('.ap-id small').textContent=`Room ${u.room}${prefs.cls?' · '+prefs.cls:''}`;toast('Profile saved')};
+  $('#apOut').onclick=async()=>{const b=$('#apOut');b.disabled=true;b.textContent='Logging out…';
+    try{await api('POST','/api/logout')}catch(e){}
+    prefs.token=null;prefs.user=null;savePrefs();closeAcctPanel();renderAcct();lastKey='';render();toast('Logged out')};
+  p.addEventListener('keydown',e=>{if(e.key==='Escape')closeAcctPanel()});
+  loadMyBookings();
+}
+async function loadMyBookings(){
+  const box=$('#apList');if(!box)return;
+  try{
+    const r=await api('GET','/api/bookings'),now=Date.now(),d=new Date(),from=new Date(d.getFullYear(),d.getMonth(),1).getTime();
+    if($('#apBk'))$('#apBk').textContent=r.bookings.filter(b=>b.created>=from).length;
+    // active / upcoming = confirmed, not yet used, and still inside the check-in window (start + 10 min)
+    const act=r.bookings.filter(b=>b.status==='confirmed'&&!b.used&&now<=b.start+CONFIRM*60000);
+    if(!$('#apList'))return;
+    if(!act.length){box.innerHTML=`<div class="ap-empty">No upcoming bookings. Tap <b>Scan QR</b> at a free machine or book a slot from any machine card.</div>`;return}
+    box.innerHTML=act.map(b=>{
+      const loc=S.bookings.find(x=>x.sid===b.id),live=b.start<=now;
+      const blk=(b.machine_id.match(/^WM-([A-C])/)||[,'C'])[1];
+      return`<button class="ap-bk" data-sid="${esc(b.id)}"><span class="ap-bk-ic">${ic.cal}</span><span class="ap-bk-t"><b>${esc(b.machine_name)} · <span class="nw">${esc(b.machine_id)}</span></b>
+        <small>${new Date(b.start).toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'})} · ${range({start:b.start,dur:b.dur}).replace(' (tomorrow)','')} · Block ${blk}${loc&&loc.pin?` · PIN <b class="pin-inline">${esc(loc.pin)}</b>`:''}</small></span>
+        <span class="badge ${live?'done':'free'}"><span class="dot"></span>${live?'Check in now':'Upcoming'}</span></button>`}).join('');
+    box.querySelectorAll('.ap-bk').forEach(el=>el.onclick=()=>{
+      const loc=S.bookings.find(x=>x.sid===el.dataset.sid);closeAcctPanel(true);
+      if(loc){if(BLOCK!==loc.blk&&loc.blk)switchBlock(loc.blk);location.hash='#/machine/'+loc.mid}
+      else toast('This booking was made on another device — open WashQ there to see its PIN');
+    });
+  }catch(e){if($('#apList'))box.innerHTML=`<div class="ap-empty">${e.status===401?'Session expired — please sign in again.':esc(e.message)}</div>`;if(e.status===401)closeAcctPanel()}
+}
+window.addEventListener('hashchange',()=>closeAcctPanel(true));
 
 initBlockSel();
 parseRoute();

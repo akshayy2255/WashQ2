@@ -21,36 +21,6 @@ async function initApi(){
 }
 const myQrBookingFor=code=>S.bookings.filter(b=>b.client===ME&&b.sid&&M(b.mid)&&mcode(b.mid)===code.toUpperCase()).sort((a,b)=>a.start-b.start)[0];
 
-// ---------- account ----------
-function renderAcct(){
-  const b=$('#acctBtn');if(!b)return;b.style.display=API.ok?'':'none';
-  const u=prefs.token&&prefs.user;
-  b.innerHTML=u?`<span class="avatar">${esc((u.name||u.room).slice(0,2).toUpperCase())}</span>`
-    :'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
-  b.onclick=()=>u?acctDialog():loginDialog(null);
-}
-function acctDialog(){
-  const u=prefs.user||{};
-  showModal(`<h2>${esc(u.name||'Signed in')}</h2><p>Room ${esc(u.room)} · each booking gets its own 4-digit unlock PIN.</p>
-    <div class="actions"><button class="btn tonal" data-close>Close</button><button class="btn primary" id="lo">Sign out</button></div>`);
-  $('[data-close]').onclick=closeModal;
-  $('#lo').onclick=async()=>{try{await api('POST','/api/logout')}catch(e){}prefs.token=null;prefs.user=null;savePrefs();renderAcct();closeModal();toast('Signed out')};
-}
-function loginDialog(then,title){
-  showModal(`<form id="lf"><h2>${esc(title||'Sign in')}</h2><p>Use your room number and password. New room? An account is created automatically.</p>
-    <div class="row"><div class="field" style="flex:1"><label>Room</label><input id="lr" maxlength="10" placeholder="B-204" autocomplete="username" value="${esc(prefs.room||'')}" required></div>
-    <div class="field" style="flex:1.3"><label>Name (optional)</label><input id="ln" maxlength="24" placeholder="Aarav" value="${esc(prefs.name||'')}"></div></div>
-    <div class="field"><label>Password</label><input id="lp" type="password" minlength="4" autocomplete="current-password" placeholder="At least 4 characters" required></div>
-    <div class="msg err" id="lm"></div>
-    <div class="actions"><button type="button" class="btn tonal" data-close>Cancel</button><button class="btn primary" id="lb">Sign in</button></div></form>`);
-  $('[data-close]').onclick=closeModal;
-  $('#lf').onsubmit=async e=>{e.preventDefault();const btn=$('#lb');btn.disabled=true;btn.textContent='Signing in…';
-    try{const r=await api('POST','/api/login',{room:$('#lr').value,name:$('#ln').value,password:$('#lp').value});
-      prefs.token=r.token;prefs.user=r.user;prefs.room=r.user.room;if(r.user.name)prefs.name=r.user.name;savePrefs();renderAcct();
-      toast(r.created?`Account created for room ${r.user.room}`:`Signed in as ${r.user.room}`);closeModal();then&&then()}
-    catch(er){$('#lm').textContent=er.message;btn.disabled=false;btn.textContent='Sign in'}};
-}
-
 // ================= Booked-slot QR unlock flow =================
 // A Reserve → Booking Confirmed ("Scan QR to Unlock")
 // B Pre-unlock checklist
@@ -107,24 +77,26 @@ function parseMachineQR(text){
 // ---------- C: Scan Machine QR screen ----------
 let SC=null;
 function openScanner(b){
+  const quick=!b;   // quick = scan-first entry point (no booking yet)
   closeScanner(true);
   const el=document.createElement('div');el.className='scan';el.id='scan';
   el.innerHTML=`<video playsinline muted autoplay></video>
     <div class="scan-mask"><div class="scan-frame"><i></i><i></i><i></i><i></i><div class="scan-line"></div></div></div>
-    <div class="scan-top"><button class="scan-ib" id="scX" aria-label="Close">${isz(ic.x,22)}</button><div class="scan-title">Scan Machine QR</div>
+    <div class="scan-top"><button class="scan-ib" id="scX" aria-label="Close">${isz(ic.x,22)}</button><div class="scan-title">${quick?'Scan QR':'Scan Machine QR'}</div>
       <button class="scan-ib" id="scT" aria-label="Flashlight" style="visibility:hidden"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 6l2 5v9h8v-9zM6 6V2h12v4M12 13v2"/></svg></button></div>
     <div class="scan-bottom">
-      <div class="scan-hint" id="scH">Stand in front of <b>${esc(M(b.mid).name)}</b> (${mcode(b.mid)}) and scan the QR sticker on it.</div>
+      <div class="scan-hint" id="scH">${quick?'Point your camera at the machine’s QR code':`Stand in front of <b>${esc(M(b.mid).name)}</b> (${mcode(b.mid)}) and scan the QR sticker on it.`}</div>
       <div class="scan-err" id="scE" role="alert"></div>
       <button class="btn primary scan-open" id="scO">${isz(ic.scan,20)}Open Camera &amp; Scan</button>
       <button class="scan-manual" id="scM">Enter machine ID manually</button></div>
     <div class="scan-sheet" id="scS"></div>`;
   document.body.appendChild(el);document.body.style.overflow='hidden';
-  SC={el,b,stream:null,run:false,torch:false,busy:false,started:0};
+  SC={el,b,quick,stream:null,run:false,torch:false,busy:false,started:0};
   $('#scX').onclick=()=>closeScanner();
   $('#scM').onclick=()=>manualEntry();
   $('#scO').onclick=()=>startCamera();
   ensureDecoder();   // load the QR decoder up-front so the first scan is instant
+  if(quick)startCamera();   // scan-first: open the camera straight away (same permission handling)
 }
 function closeScanner(instant){
   if(!SC)return;SC.run=false;if(SC.stream)SC.stream.getTracks().forEach(t=>t.stop());
@@ -174,7 +146,7 @@ async function startCamera(){
   btn.style.display='none';btn.disabled=false;
   const v=s.el.querySelector('video');v.srcObject=s.stream;try{await v.play()}catch(e){}
   s.el.classList.add('live');s.run=true;s.started=Date.now();
-  $('#scH').innerHTML=`Point your camera at the QR code on <b>${esc(M(s.b.mid).name)}</b> — it scans automatically.`;
+  $('#scH').innerHTML=s.b?`Point your camera at the QR code on <b>${esc(M(s.b.mid).name)}</b> — it scans automatically.`:'Point your camera at the machine’s QR code — it scans automatically.';
   const track=s.stream.getVideoTracks()[0],caps=track.getCapabilities?track.getCapabilities():{};
   if(caps.torch){const t=$('#scT');t.style.visibility='visible';t.onclick=async()=>{try{s.torch=!s.torch;await track.applyConstraints({advanced:[{torch:s.torch}]});t.classList.toggle('on',s.torch)}catch(e){scanErr('Flashlight isn’t available')}}}
   let dec;try{dec=await ensureDecoder()}catch(e){return camUnavailable('The QR decoder failed to load.')}
@@ -201,7 +173,9 @@ let lastBad='';
 function onScanned(text){
   if(!SC||SC.busy)return;
   const code=parseMachineQR(text);
+  if(!code&&SC.quick){SC.busy=true;return unrecognizedQR()}
   if(!code){if(lastBad!==text){lastBad=text;scanErr('This QR code isn’t a WashQ machine code. Scan the sticker on the washing machine.')}return}
+  if(SC.quick){SC.busy=true;if(navigator.vibrate)navigator.vibrate(60);return quickScanned(code)}
   SC.busy=true;if(navigator.vibrate)navigator.vibrate(60);
   // E(1): immediate client-side match check — no unlock, no password on mismatch
   if(code!==mcode(SC.b.mid)){wrongMachine(code);return}
@@ -209,15 +183,15 @@ function onScanned(text){
   setTimeout(()=>verifyMachine(SC.b,code),300);
 }
 function manualEntry(){
-  if(!SC)return;
-  sheet(`<h2>Enter machine ID</h2><p>It’s printed under the QR code, e.g. ${mcode(SC.b.mid)}. Use this only if the camera isn’t working.</p>
-    <form id="mf"><div class="field"><input id="mi" placeholder="${mcode(SC.b.mid)}" autocapitalize="characters" maxlength="8" required></div>
+  if(!SC)return;const ex=SC.b?mcode(SC.b.mid):mcode(1);
+  sheet(`<h2>Enter machine ID</h2><p>It’s printed under the QR code, e.g. ${ex}. Use this only if the camera isn’t working.</p>
+    <form id="mf"><div class="field"><input id="mi" placeholder="${ex}" autocapitalize="characters" maxlength="8" required></div>
     <div class="actions"><button type="button" class="btn tonal" id="mc">Back to camera</button><button class="btn primary">Verify</button></div></form>`);
   setTimeout(()=>$('#mi')&&$('#mi').focus(),80);
   $('#mc').onclick=()=>hideSheet();
   $('#mf').onsubmit=e=>{e.preventDefault();const raw=$('#mi').value.trim().toUpperCase().replace(/^WM-?/,'');const mm=raw.match(/^([A-C])?(\d{1,4})$/);
     const code=mm?(mm[1]?'WM-'+mm[1]+mm[2].padStart(2,'0'):mcode(+mm[2])):null;
-    if(!code){toast('Enter a valid machine ID like '+mcode(SC.b.mid));return}
+    if(!code){toast('Enter a valid machine ID like '+ex);return}
     SC.busy=false;onScanned(code)};
 }
 function sheet(html){const s=$('#scS');if(!s)return;s.innerHTML=`<div class="dialog">${html}</div>`;s.classList.add('on')}
